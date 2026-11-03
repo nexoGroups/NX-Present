@@ -1,0 +1,47 @@
+name: CI
+
+# Builds and checks every change. Releases are not built here: they come from the release routine in
+# .claude/skills/release (draft first, published only after an explicit yes).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore NX-Present.slnx --locked-mode
+      - name: Build
+        run: dotnet build NX-Present.slnx -c Release --no-restore
+      # The validation program is the project's test suite (logic, transitions, UI, update service). Without --media it needs
+      # neither the video engine nor real web pages.
+      - name: Validation
+        timeout-minutes: 15
+        run: dotnet run --project tests/NX-Present.Validation/NX-Present.Validation.csproj -c Release --no-build
+
+  # Proves that the release can be packed with Velopack (Setup, update packages, feed). Nothing is published.
+  pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Install the Velopack CLI (same version as the NuGet package)
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/NX-Present/NX-Present.csproj
+          $version = (@($project.Project.ItemGroup.PackageReference) | Where-Object { $_.Include -eq 'Velopack' }).Version
+          dotnet tool install -g vpk --version $version
+      - name: Pack
+        shell: pwsh
+        run: ./scripts/Build.ps1 -Installer -SkipValidation
