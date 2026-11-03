@@ -387,7 +387,6 @@ public partial class MainWindow : Window
         CloseOutput();
         closing = true;
         try { updateWork?.Cancel(); } catch (ObjectDisposedException) { }
-        updater?.Dispose();
         timer.Stop();
         CompositionTarget.Rendering -= OnRendering;
         SystemEvents.DisplaySettingsChanged -= DisplaysChanged;

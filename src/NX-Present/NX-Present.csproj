@@ -23,5 +23,12 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageReference Include="LibVLCSharp.WPF" Version="3.10.2" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
+    <!-- The vpk tool that packs the release must have exactly this version (scripts/Build.ps1, .github/workflows/ci.yml). -->
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Program.cs provides Main, so that VelopackApp can run before WPF starts. -->
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
   </ItemGroup>
 </Project>

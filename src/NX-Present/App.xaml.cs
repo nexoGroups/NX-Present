@@ -57,19 +57,6 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex) { Log(ex); MessageBox.Show("NX-Present konnte nicht starten:\n" + ex.Message); splash.Close(); Shutdown(1); }
     }
-    /// <summary>The setup of an update checks this lock at start and would refuse to run while it is held.</summary>
-    internal void ReleaseInstanceLock()
-    {
-        instance?.Dispose();
-        instance = null;
-    }
-    /// <summary>Takes the lock back when the update setup could not be started, so that a second copy still cannot open.</summary>
-    internal void RestoreInstanceLock()
-    {
-        if (instance != null) return;
-        var restored = new Mutex(true, InstanceName, out bool created);
-        if (created) instance = restored; else restored.Dispose();
-    }
     public static void Log(Exception ex)
     {
         try { File.AppendAllText(Path.Combine(DataDirectory, "errors.log"), DateTimeOffset.Now + " " + ex + Environment.NewLine); } catch { }

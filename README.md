@@ -10,6 +10,11 @@ Vorschau wählen, Programm sehen, mit AUTO überblenden.
 [Änderungen](CHANGELOG.md) ·
 [Fehler melden](https://github.com/nexoGroups/NX-Present/issues)
 
+[![CI](https://github.com/nexoGroups/NX-Present/actions/workflows/ci.yml/badge.svg)](https://github.com/nexoGroups/NX-Present/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/nexoGroups/NX-Present)](https://github.com/nexoGroups/NX-Present/releases/latest)
+![Plattform](https://img.shields.io/badge/Plattform-Windows%20x64-blue)
+[![Lizenz](https://img.shields.io/badge/Lizenz-nichtkommerziell-lightgrey)](LICENSE.txt)
+
 ![NX-Present: Vorschau- und Programm-Monitor, Übergangsfeld mit CUT, AUTO und Überblender, Tasten-Reihen für Programm und Vorschau, Medienpool](docs/images/mixer.png)
 
 </div>
@@ -88,17 +93,17 @@ NX-Present sucht beim Start im Hintergrund auf der offiziellen GitHub-Veröffent
 ## Installieren
 
 1. Öffne die [Veröffentlichungen](https://github.com/nexoGroups/NX-Present/releases/latest).
-2. Lade das Setup herunter (**NX-Present-Setup-…-x64.exe**). Der von GitHub automatisch angebotene Download **Source code** ist der Quellcode, kein fertiges Programm.
-3. Starte das Setup und akzeptiere die Nutzungsbedingungen, wenn du sie einhalten möchtest.
+2. Lade das Setup herunter (**NXPresent-win-Setup.exe**). Der von GitHub automatisch angebotene Download **Source code** ist der Quellcode, kein fertiges Programm.
+3. Starte das Setup. Es installiert ohne weitere Rückfragen für dein Windows-Benutzerkonto. Es gelten die Nutzungsbedingungen aus [LICENSE.txt](LICENSE.txt); sie liegen auch im Programmordner (`LICENSE-NX-Present.txt`).
 4. Öffne NX-Present über das Startmenü oder die Desktop-Verknüpfung.
 
-Das Setup installiert für dein Windows-Benutzerkonto. Eine eigene Installation von .NET oder VLC ist nicht nötig, die Laufzeitdateien liegen bei. Für Webseiten braucht NX-Present Microsoft Edge WebView2; fehlt diese Laufzeit, installiert das Setup den offiziellen Microsoft-Bootstrapper, wofür eine Internetverbindung nötig ist.
+Das Setup legt das Programm unter `%LOCALAPPDATA%\NXPresent` ab. Eine eigene Installation von .NET oder VLC ist nicht nötig, die Laufzeitdateien liegen bei. Für Webseiten braucht NX-Present Microsoft Edge WebView2; fehlt diese Laufzeit, richtet das Setup sie ein, wofür eine Internetverbindung nötig ist. Einstellungen, Pool und Browserprofile liegen getrennt davon in `%LOCALAPPDATA%\NX-Present` und bleiben bei Updates und beim Deinstallieren erhalten.
 
-**Aktualisieren:** Eine installierte Fassung ab 0.4.0 aktualisiert sich selbst (siehe [Updates](#updates)). Ältere Fassungen wie 0.3.1 kennen die Funktion nicht; installiere für den Wechsel einmal das neue Setup von Hand, es ersetzt die alte Version und behält deine Einstellungen. Eine selbst gebaute Kopie wird von der Update-Funktion nie überschrieben, sie meldet nur, dass es eine neue Version gibt.
+**Aktualisieren:** Eine installierte Fassung ab 0.4.0 aktualisiert sich selbst (siehe [Updates](#updates)). Ältere Fassungen wie 0.3.1 kennen die Funktion nicht und wurden mit einem anderen Setup installiert. Installiere für den Wechsel einmal das neue Setup von Hand. Es legt NX-Present neu an, ohne die alte Kopie zu ersetzen; deinstalliere die alte danach unter **Windows-Einstellungen → Apps**. Deine Einstellungen bleiben erhalten. Eine selbst gebaute Kopie wird von der Update-Funktion nie überschrieben, sie meldet nur, dass sie nicht über das Setup installiert wurde.
 
-**System:** Windows 11, 64 Bit, Intel/AMD. Windows 10 ab 22H2 lässt der Installer zu, es wurde aber nicht gesondert geprüft. Für die Beamer-Ausgabe brauchst du zwei getrennte Anzeigen im Windows-Modus **Erweitern**. ARM64, macOS und Linux werden nicht angeboten.
+**System:** Windows 11, 64 Bit, Intel/AMD. Windows 10 ab 22H2 lässt das Setup zu, es wurde aber nicht gesondert geprüft. Für die Beamer-Ausgabe brauchst du zwei getrennte Anzeigen im Windows-Modus **Erweitern**. ARM64, macOS und Linux werden nicht angeboten.
 
-**Signatur:** Die Veröffentlichungen sind **nicht mit einem eigenen Code-Signing-Zertifikat signiert**. Windows kann deshalb einen unbekannten Herausgeber anzeigen. Auf PCs mit aktivierter **Smart App Control** oder strengen Richtlinien kann der Start unsignierter Programme blockiert werden, auch bei selbst gebauten. NX-Present fordert dich nicht auf, Windows-Schutzfunktionen abzuschalten. Die SHA-256-Prüfsumme im Release hilft, die heruntergeladene Datei mit der veröffentlichten zu vergleichen; sie ersetzt keine Signatur. Die Update-Funktion prüft jedes geladene Setup genauso gegen die `SHA256SUMS.txt` derselben Veröffentlichung und lädt nur von `github.com/nexoGroups/NX-Present/releases`. Das erkennt beschädigte oder unvollständige Downloads, aber keine manipulierte Veröffentlichung. Blockiert Windows ein Update-Setup, meldet NX-Present das und lässt die Datei im Ordner `%LOCALAPPDATA%\NX-Present\Updates` liegen.
+**Signatur:** Die Veröffentlichungen sind **nicht mit einem eigenen Code-Signing-Zertifikat signiert**. Windows kann deshalb einen unbekannten Herausgeber anzeigen. Auf PCs mit aktivierter **Smart App Control** oder strengen Richtlinien kann der Start unsignierter Programme blockiert werden, auch bei selbst gebauten. NX-Present fordert dich nicht auf, Windows-Schutzfunktionen abzuschalten. Die SHA-256-Prüfsumme in `SHA256SUMS.txt` im Release hilft, die heruntergeladene Datei mit der veröffentlichten zu vergleichen; sie ersetzt keine Signatur. Die Update-Funktion lädt nur von `github.com/nexoGroups/NX-Present` und prüft jedes geladene Paket gegen die Prüfsumme in der Update-Liste derselben Veröffentlichung. Das erkennt beschädigte oder unvollständige Downloads, aber keine manipulierte Veröffentlichung. Blockiert Windows den Updater, meldet NX-Present das und bleibt auf der aktuellen Version.
 
 ## In einer Minute startklar
 
@@ -143,7 +148,7 @@ Die ausführliche Anleitung steht in der [Bedienung](docs/BEDIENUNG.md); eine Ku
 
 ## Selbst bauen
 
-Für den Programm-Build genügt das **.NET 10 SDK unter Windows**; Visual Studio ist nicht erforderlich. Zum Bauen des Installers kommt **Inno Setup 7** hinzu.
+Für den Programm-Build genügt das **.NET 10 SDK unter Windows**; Visual Studio ist nicht erforderlich. Zum Bauen des Setups kommt das Velopack-Werkzeug hinzu (`dotnet tool install -g vpk --version 1.2.161`; die Version muss zum Paket `Velopack` in `src/NX-Present/NX-Present.csproj` passen).
 
 ```powershell
 # Im geklonten Repository:
@@ -152,8 +157,8 @@ Für den Programm-Build genügt das **.NET 10 SDK unter Windows**; Visual Studio
 # Mit den Prüfungen, die die echte Video-Engine und WebView2 brauchen:
 .\scripts\Build.ps1 -Media
 
-# Zusätzlich eine Installations-EXE erzeugen:
-.\scripts\Build.ps1 -Installer -InstallerCompiler 'C:\Program Files\Inno Setup 7\ISCC.exe'
+# Zusätzlich Setup, Update-Pakete und Update-Liste erzeugen (artifacts/release):
+.\scripts\Build.ps1 -Installer
 ```
 
 Das Skript stellt die Pakete wieder her, baut die Anwendung, führt die Validierung aus und veröffentlicht eine eigenständig lauffähige Windows-x64-Fassung unter `artifacts/`. Wie das Projekt aufgebaut ist und was die Prüfungen abdecken, steht in [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md).
