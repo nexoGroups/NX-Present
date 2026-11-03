@@ -13,7 +13,7 @@ public partial class MainWindow
     // Win32 error that CreateProcess reports when an application control policy (Smart App Control, WDAC) refuses a file.
     private const int ApplicationControlBlock = 4551;
 
-    private Updater? updater;
+    private UpdateService? updater;
     private UpdateOffer? offeredUpdate;
     private CancellationTokenSource? updateWork;
     private bool updateBusy;
@@ -22,7 +22,7 @@ public partial class MainWindow
 
     private void InitializeUpdates()
     {
-        UpdateVersionText.Text = Updater.CurrentVersion.ToString(3);
+        UpdateVersionText.Text = UpdateService.CurrentVersion.ToString(3);
         updateAttempt = savedSettings.UpdateAttempt;
         if (isolated)
         {
@@ -30,14 +30,14 @@ public partial class MainWindow
             CheckUpdateButton.IsEnabled = false;
             return;
         }
-        updater = new Updater();
-        updater.CleanUp();
+        updater = new UpdateService();
+        if (!updater.IsInstalled) UpdateStatusText.Text = "Diese Kopie wurde nicht über das Setup installiert. Updates gibt es nur für die installierte Fassung.";
         if (updateAttempt != null)
         {
-            if (Updater.TryParseVersion(updateAttempt, out var attempted) && attempted > Updater.CurrentVersion)
+            if (UpdateService.TryParseVersion(updateAttempt, out var attempted) && attempted > UpdateService.CurrentVersion)
             {
                 failedUpdate = attempted;
-                UpdateStatusText.Text = "Das letzte Update auf Version " + attempted.ToString(3) + " wurde nicht abgeschlossen. Es wird nicht automatisch wiederholt. Protokoll: " + updater.DownloadFolder;
+                UpdateStatusText.Text = "Das letzte Update auf Version " + attempted.ToString(3) + " wurde nicht abgeschlossen. Es wird nicht automatisch wiederholt. Protokoll: %LOCALAPPDATA%\\NXPresent\\velopack.log";
                 Status("Das letzte Update auf Version " + attempted.ToString(3) + " wurde nicht abgeschlossen. Details unter Setup.");
             }
             else updateAttempt = null;
@@ -49,7 +49,7 @@ public partial class MainWindow
     /// <summary>Runs shortly after start: looks for an update and, when allowed and nothing is live, installs it.</summary>
     private async Task StartupUpdateAsync()
     {
-        if (updater == null || CheckUpdatesAtStart.IsChecked != true) return;
+        if (updater == null || !updater.IsInstalled || CheckUpdatesAtStart.IsChecked != true) return;
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(3));
@@ -57,7 +57,7 @@ public partial class MainWindow
             var result = await CheckForUpdateAsync(manual: false);
             if (result?.Offer is not UpdateOffer offer) return;
             string version = offer.Version.ToString(3);
-            if (AutoInstallUpdates.IsChecked != true || !updater.CanInstall) { Status("Update " + version + " ist verfügbar. Installieren unter Setup."); return; }
+            if (AutoInstallUpdates.IsChecked != true) { Status("Update " + version + " ist verfügbar. Installieren unter Setup."); return; }
             if (failedUpdate != null && offer.Version <= failedUpdate) { Status("Update " + version + " ist verfügbar, der letzte Versuch schlug aber fehl. Installieren unter Setup."); return; }
             if (!UpdateIsSafe) { Status("Update " + version + " ist verfügbar. Es wird nicht automatisch installiert, weil gerade Inhalt läuft. Installieren unter Setup."); return; }
             await InstallUpdateAsync(offer, automatic: true);
@@ -90,7 +90,7 @@ public partial class MainWindow
         updateWork = null;
         UpdateProgress.Visibility = Visibility.Collapsed;
         CheckUpdateButton.IsEnabled = updater != null;
-        InstallUpdateButton.IsEnabled = offeredUpdate != null && updater?.CanInstall == true;
+        InstallUpdateButton.IsEnabled = offeredUpdate != null && updater?.IsInstalled == true;
         ShowUpdateBadge();
     }
 
@@ -100,13 +100,12 @@ public partial class MainWindow
         BeginUpdateWork("Suche nach Updates …");
         try
         {
-            var result = await updater.CheckAsync(Updater.CurrentVersion, updateWork!.Token);
+            var result = await updater.CheckAsync(UpdateService.CurrentVersion, updateWork!.Token);
             if (closing) return null;
             offeredUpdate = result.Offer;
             UpdateStatusText.Text = result.Message;
             if (result.Offer is UpdateOffer offer)
             {
-                if (!updater.CanInstall) UpdateStatusText.Text += " Diese Kopie wurde nicht über das Setup installiert und lässt sich nicht selbst ersetzen. Lade das Setup von der Veröffentlichungsseite.";
                 InstallUpdateButton.Visibility = Visibility.Visible;
                 UpdateNotesButton.Visibility = Visibility.Visible;
                 if (manual) Status("Update " + offer.Version.ToString(3) + " ist verfügbar.");
@@ -136,7 +135,7 @@ public partial class MainWindow
     private async Task InstallUpdateAsync(UpdateOffer offer, bool automatic)
     {
         if (updater == null || updateBusy || closing) return;
-        if (!updater.CanInstall) { UpdateStatusText.Text = "Diese Kopie wurde nicht über das Setup installiert. Lade das Setup von der Veröffentlichungsseite."; return; }
+        if (!updater.IsInstalled) { UpdateStatusText.Text = "Diese Kopie wurde nicht über das Setup installiert. Lade das Setup von der Veröffentlichungsseite."; return; }
         string version = offer.Version.ToString(3);
         BeginUpdateWork("Version " + version + " wird geladen …");
         UpdateProgress.Value = 0;
@@ -144,7 +143,6 @@ public partial class MainWindow
         UpdateBadge.Content = "UPDATE LÄDT";
         UpdateBadge.ToolTip = "Klick bricht den Download ab.";
         UpdateBadge.Visibility = Visibility.Visible;
-        string? setup = null;
         try
         {
             var progress = new Progress<double>(fraction =>
@@ -156,7 +154,7 @@ public partial class MainWindow
                 UpdateStatusText.Text = "Version " + version + " wird geladen … " + percent.ToString(CultureInfo.InvariantCulture) + " %";
             });
             Status("Update " + version + " wird geladen. Das Programm läuft währenddessen normal weiter.");
-            setup = await updater.DownloadAsync(offer, progress, updateWork!.Token);
+            await updater.DownloadAsync(offer, progress, updateWork!.Token);
             if (closing) return;
             if (!UpdateIsSafe)
             {
@@ -172,7 +170,7 @@ public partial class MainWindow
                     return;
                 }
             }
-            LaunchInstaller(setup, offer);
+            ApplyUpdate(offer);
         }
         catch (OperationCanceledException)
         {
@@ -190,29 +188,26 @@ public partial class MainWindow
         finally { EndUpdateWork(); }
     }
 
-    /// <summary>Hands over to the setup: it waits for this process, installs over it and starts the new version.</summary>
-    private void LaunchInstaller(string setup, UpdateOffer offer)
+    /// <summary>Hands over to the updater: it waits for this process, installs the new version and starts it.</summary>
+    private void ApplyUpdate(UpdateOffer offer)
     {
         string version = offer.Version.ToString(3);
-        var app = Application.Current as App;
         string? previousAttempt = updateAttempt;
         updateAttempt = version;
         SaveSettings();
-        app?.ReleaseInstanceLock();
         try
         {
-            updater!.LaunchInstaller(setup, offer.Version);
+            updater!.ApplyAfterExit(offer);
         }
         catch (Exception ex)
         {
-            app?.RestoreInstanceLock();
             updateAttempt = previousAttempt;
             SaveSettings();
             App.Log(ex);
             string reason = ex is Win32Exception { NativeErrorCode: ApplicationControlBlock }
-                ? "Windows hat das Setup blockiert (Anwendungssteuerung, zum Beispiel Smart App Control), weil es nicht signiert ist."
-                : "Das Setup konnte nicht gestartet werden: " + ex.Message;
-            UpdateStatusText.Text = reason + " Die geladene Datei liegt in " + updater!.DownloadFolder + ".";
+                ? "Windows hat den Updater blockiert (Anwendungssteuerung, zum Beispiel Smart App Control), weil er nicht signiert ist."
+                : "Der Updater konnte nicht gestartet werden: " + ex.Message;
+            UpdateStatusText.Text = reason;
             Status(reason);
             return;
         }
@@ -227,7 +222,7 @@ public partial class MainWindow
     }
     private void UpdateNotesClicked(object sender, RoutedEventArgs e)
     {
-        if (offeredUpdate?.ReleasePage is not Uri page || !Updater.IsTrustedUrl(page)) return;
+        if (offeredUpdate?.ReleasePage is not Uri page) return;
         try { Process.Start(new ProcessStartInfo(page.AbsoluteUri) { UseShellExecute = true }); }
         catch (Exception ex) { App.Log(ex); Status("Die Seite konnte nicht geöffnet werden: " + ex.Message); }
     }
