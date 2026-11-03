@@ -9,7 +9,8 @@ Die Projektlizenz von NX-Present gilt ausschließlich für den eigenen Programmc
 | VideoLAN.LibVLC.Windows | 3.0.24 | Das verwendete NuGet-Paket wird von VideoLAN als LGPL-2.1-or-later bereitgestellt. Das separate Paket `.GPL` wird nicht verwendet. [Paket](https://www.nuget.org/packages/VideoLAN.LibVLC.Windows/3.0.24), [VLC-Quellen](https://download.videolan.org/pub/videolan/vlc/3.0.24/vlc-3.0.24.tar.xz), [Paketierung](https://github.com/mfkl/libvlc-nuget) |
 | Native Video-/Audio-Abhängigkeiten von VLC | Versionen gemäß VLC-3.0.24-Contrib-Rezepten | Eigene MIT-/BSD-/LGPL- und weitere Lizenztexte in ihren unveränderten Quellarchiven. Die VLC-Quellen enthalten die zugehörigen Buildrezepte und Patches unter `contrib/src` sowie Windows-Buildskripte unter `extras/package/win32`. |
 | Microsoft.Web.WebView2 SDK | 1.0.4314.35 | Microsoft-Lizenz; [SDK-Lizenz](licenses/WebView2-SDK-LICENSE.txt), [NuGet-Paket](https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4314.35) |
-| Microsoft Edge WebView2 Runtime / Bootstrapper | Evergreen | Unveränderter offizieller Microsoft-Bootstrapper im Installer; die Runtime wird nur bei Bedarf von Microsoft installiert. [Verteilungshinweise](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution) |
+| Velopack | 1.2.161 | MIT; Setup, Updater (`Update.exe`) und die Update-Bibliothek in der Anwendung. [Quellcode](https://github.com/velopack/velopack), [Lizenztext](licenses/Velopack-LICENSE.txt) |
+| Microsoft Edge WebView2 Runtime | Evergreen | Wird bei Bedarf vom Setup über Microsofts offizielle Quelle installiert. [Verteilungshinweise](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution) |
 
 ## Quellcode und Hinweise
 
@@ -21,7 +22,7 @@ Sie dürfen die LGPL-Bibliotheken entsprechend ihrer Lizenz ersetzen oder verän
 
 ## Werkzeuge zum Erstellen des Installers
 
-Inno Setup 7 erstellt das Setup und das Deinstallationsprogramm. Die Laufzeit enthält dessen ursprüngliche Copyright-Hinweise. [Inno Setup](https://jrsoftware.org/), [Quellen und Lizenz](https://github.com/jrsoftware/issrc). Git, GitHub CLI, .NET SDK und Compilerwerkzeuge werden nicht als Entwicklungspakete auf dem PC des Endnutzers installiert.
+Das Velopack-Werkzeug `vpk` (MIT) erstellt Setup, Update-Pakete und Update-Liste; seine Setup- und Updater-Programme gehören zur Veröffentlichung (siehe Tabelle). Git, GitHub CLI, .NET SDK und Compilerwerkzeuge werden nicht als Entwicklungspakete auf dem PC des Endnutzers installiert.
 
 ## Generierter VLC-Plugin-Katalog
 

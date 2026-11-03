@@ -7,7 +7,7 @@ NX-Present ist eine Windows-Desktop-Anwendung mit C#, WPF, .NET 10, LibVLCSharp 
 - Windows x64
 - .NET SDK 10.0.403; `global.json` erlaubt neuere Patches dieses SDK-Featurebands
 - Netzwerkzugriff auf NuGet für den ersten Restore
-- Optional: Inno Setup 7 für die Installations-EXE
+- Optional: das Velopack-Werkzeug `vpk` für Setup und Update-Pakete (`dotnet tool install -g vpk --version 1.2.161`; die Version muss genau zum Paket `Velopack` in `src/NX-Present/NX-Present.csproj` passen, `Build.ps1` und die CI prüfen das)
 
 Visual Studio ist nicht erforderlich. Die Werkzeuge zum Bauen gehören nicht in den Git-Quellbaum. Binärdateien, Browserprofile, Einstellungen und Zugangsdaten werden nicht eingecheckt.
 
@@ -16,8 +16,10 @@ Visual Studio ist nicht erforderlich. Die Werkzeuge zum Bauen gehören nicht in 
 ```powershell
 .\scripts\Build.ps1
 .\scripts\Build.ps1 -Media
-.\scripts\Build.ps1 -Installer -InstallerCompiler 'C:\Program Files\Inno Setup 7\ISCC.exe'
+.\scripts\Build.ps1 -Installer
 ```
+
+`-Installer` packt mit Velopack nach `artifacts/release`: `NXPresent-win-Setup.exe`, `NXPresent-win-Portable.zip`, das volle Paket `NXPresent-X.Y.Z-full.nupkg` (bei früheren Velopack-Versionen kleine `-delta`-Pakete), die Update-Liste `releases.win.json` und `SHA256SUMS.txt`. Die Versionshinweise stammen aus dem Abschnitt `## X.Y.Z` der `CHANGELOG.md`. `-SkipValidation` lässt die Prüfungen aus (die CI führt sie in einem eigenen Schritt aus).
 
 Alternativ direkt mit dem SDK:
 
@@ -42,12 +44,12 @@ Die Standardvalidierung braucht weder Video-Engine noch Browser und umfasst:
 - die Mischer-Logik mit künstlicher Uhr: Vorschau, CUT, AUTO, Überblender, Fade to Black, Tausch von Programm und Vorschau, Audio-Pegel, abgebrochene und fehlgeschlagene Quellen
 - den Compositor pixelgenau für jede Übergangsart (Mix, Dip, beide Wischer, Iris, Schieben) und für Schwarz
 - Standbilder mit EXIF-Ausrichtung und Größenbegrenzung
-- den Update-Dienst gegen einen Ersatz für GitHub ohne Netzwerk: Versionsnummern, vertrauenswürdige Adressen, `SHA256SUMS.txt`, Entscheidung aus der Release-Antwort (neuer, gleich, älter, Vorabversion, fehlende Dateien, fremde Adressen, Fehlerantworten), Download mit Prüfsumme, abgebrochene und beschädigte Downloads, Aufräumen, Einstellungen
+- den Update-Dienst ohne Netzwerk und ohne Installation: Versionsnummern, Adressen, das Verhalten einer nicht installierten Kopie (kein Angebot, kein Download, kein Start des Updaters), Einstellungen. Velopacks Prüfung von Paketen und der eigentliche Update-Weg lassen sich nur in einer installierten Kopie ausprobieren (siehe „Veröffentlichen“)
 - das Hauptfenster in einem unsichtbaren Fenster außerhalb aller Monitore: Medienpool, Tasten-Reihen, CUT und AUTO in Echtzeit, T-Bar, gesperrte Programm-Zeile, FTB, Mindestgröße, Speichern der Einstellungen. Dabei entstehen Screenshots der Oberfläche im Ordner `runs/` neben dem Testprogramm.
 
 Mit `--media` (oder `Build.ps1 -Media`) kommen die Prüfungen mit der echten Video-Engine und der WebView2-Laufzeit hinzu: ein selbst erzeugtes Testvideo (Bildfarben, Cue, Wiedergabe, Pause, Suchen, Schleife, erneutes Bereitstellen, Freigabe, defekte Datei), eine lokale animierte Webseite (Bilder, Bewegung, Freigabe des Browserfensters, nicht erreichbare Adresse) und ein Mischer mit echten Quellen. `--video <Dateipfad>` ergänzt einen Test mit einer eigenen Videodatei. `--media-only` führt nur die Mischer- und Medienprüfungen aus.
 
-`--live-updates` fragt zusätzlich die echte Veröffentlichungsseite des Projekts ab (nur die Release-Auskunft, es wird nichts geladen) und prüft, dass `Updater` deren Setup und Prüfsummenliste als vertrauenswürdig erkennt. Ändert sich der Besitzer oder Name des Repositorys, muss `Updater.Repository` mitgezogen werden; die alte Adresse wird bewusst nicht weiter akzeptiert, weil ein frei gewordener Name von jemand anderem belegt werden könnte.
+Ändert sich der Besitzer oder Name des Repositorys, müssen `UpdateService.Repository` und die Adresse in `scripts/Build.ps1` mitgezogen werden; die alte Adresse wird bewusst nicht weiter benutzt, weil ein frei gewordener Name von jemand anderem belegt werden könnte.
 
 Der zusätzliche Parameter `--audio` ist ein bewusster Integrationstest, der Windows-Standardgeräte umstellt und wiederherstellt; er darf nicht parallel zu einer laufenden NX-Present-Sitzung ausgeführt werden.
 
@@ -69,8 +71,8 @@ Der zusätzliche Parameter `--audio` ist ein bewusster Integrationstest, der Win
 | `PatternView` / `ClockView` / `CueVisual` | Testsignale, Uhr, Texttafeln und deren Vorschaubilder |
 | `AudioRouting` | Gemeinsames Windows-Standardgerät und Wiederherstellung |
 | `SettingsStore` / `ShowFile` | Einstellungen und `.nxshow`-Dateien |
-| `Updater`, `MainWindow.Update` | Suche, Download und Start des Update-Setups; Setup-Karte, Statusleiste und Prüfung beim Start |
-| `installer/` | Benutzerbezogenes Windows-Setup mit WebView2-Erkennung, stillem Update und Neustart der Anwendung |
+| `Program`, `UpdateService`, `MainWindow.Update` | Velopack-Einstieg (`VelopackApp` zuerst in `Main`), Suche, Download und Start des Updaters; Setup-Karte, Statusleiste und Prüfung beim Start |
+| `installer/cache` | Der erzeugte VLC-Plugin-Katalog samt Manifest, den `scripts/Prepare-PluginCache.ps1` vor dem Packen in die Anwendung legt |
 
 ### Der Signalweg
 
@@ -88,32 +90,26 @@ Jede Quelle ist ein `SourceFeed`. Alle Monitore und das Ausgabefenster bauen mit
 
 ### Updates
 
-`Updater` fragt `https://api.github.com/repos/nexoGroups/NX-Present/releases/latest` ab (ohne Anmeldung, höchstens 60 Anfragen je Stunde und Adresse) und bietet eine Veröffentlichung nur an, wenn
+`UpdateService` benutzt Velopack mit einer `GithubSource` auf `https://github.com/nexoGroups/NX-Present` (ohne Anmeldung, keine Vorabversionen). Velopack liest aus der neuesten Veröffentlichung die Update-Liste `releases.win.json`, lädt das volle Paket `NXPresent-X.Y.Z-full.nupkg` (oder kleine `-delta`-Pakete) und prüft es gegen Größe und SHA-256 der Liste. `UpdateService` bietet nur an, wenn die Version ein reines `X.Y.Z` ohne Zusatz wie `-beta` ist und größer als die laufende (`UpdateService.CurrentVersion`, aus `<Version>` in der `.csproj`). Die Prüfsumme stammt aus derselben Veröffentlichung; sie erkennt beschädigte Downloads, keine manipulierte Veröffentlichung. Ein signiertes Setup wäre der nächste Schritt, sobald ein Zertifikat vorliegt.
 
-- sie weder Entwurf noch Vorabversion ist und ihr Tag `vX.Y.Z` (oder `X.Y.Z`) lautet, ohne Zusatz wie `-beta`,
-- die Version größer ist als die laufende (`Updater.CurrentVersion`, aus `<Version>` in der `.csproj`),
-- sie genau die Dateien `NX-Present-Setup-X.Y.Z-x64.exe` und `SHA256SUMS.txt` enthält und beide Adressen mit `https://github.com/nexoGroups/NX-Present/releases/` beginnen.
+`Program.Main` startet als Erstes `VelopackApp.Build().Run()`: Setup und Updater rufen die EXE mit besonderen Argumenten auf, die dort behandelt werden, bevor WPF startet (`App.xaml` ist dafür in der `.csproj` als `Page` statt `ApplicationDefinition` eingetragen). Updates gibt es nur in einer Kopie, die das Setup installiert hat (`UpdateService.IsInstalled`); ein Selbstbau meldet das und wird nie ersetzt.
 
-Der Download geht in `%LOCALAPPDATA%\NX-Present\Updates\<name>.part`, wird auf Größe und SHA-256 laut `SHA256SUMS.txt` geprüft und erst dann umbenannt. Die Prüfsumme stammt aus derselben Veröffentlichung; sie erkennt beschädigte Downloads, keine manipulierte Veröffentlichung. Ein Austausch gegen ein signiertes Setup (Authenticode-Prüfung vor dem Start) ist der nächste Schritt, sobald ein Zertifikat vorliegt.
+Die **PackId `NXPresent`** (`scripts/Build.ps1`) bestimmt den Installationsordner `%LOCALAPPDATA%\NXPresent` (Programm unter `current`, Updater `Update.exe`, Pakete unter `packages`). Sie darf nach der ersten Veröffentlichung nie geändert werden, sonst finden installierte Kopien keine Updates mehr. Sie darf auch nicht mit dem Datenordner `%LOCALAPPDATA%\NX-Present` (`App.DataDirectory`: Einstellungen, Pool, Browserprofile, Protokolle) zusammenfallen: Velopack löscht beim Deinstallieren den ganzen Installationsordner.
 
-Zum Installieren gibt die Anwendung ihre Einzelinstanz-Sperre frei (`Local\NX-Present-Controller`, sonst bricht das Setup wegen `AppMutex` ab), startet das Setup mit `/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /relaunch=1 /waitpid=<Prozess-ID> /LOG="…\setup-X.Y.Z.log"` und beendet sich. Das Setup wartet in `InitializeSetup` bis zu 30 Sekunden auf die Prozess-ID, ersetzt die Dateien und startet NX-Present über den `[Run]`-Eintrag mit `Check: RelaunchRequested`. Scheitert der Start des Setups, wird die Sperre zurückgeholt. Eine Kopie ohne `unins000.exe` neben der EXE (Selbstbau) wird nie ersetzt. Vor dem Start wird `UpdateAttempt` in den Einstellungen gesetzt; ist die laufende Version danach noch älter, gilt der Versuch als fehlgeschlagen und wird nicht automatisch wiederholt.
+Zum Installieren ruft `UpdateService.ApplyAfterExit` `WaitExitThenApplyUpdates` auf. Das startet Velopacks `Update.exe`, das auf das Ende des Programms wartet, die neue Version einspielt und neu startet; das Hauptfenster wird danach normal geschlossen, sodass die Ausgabe geordnet endet. Vor dem Start wird `UpdateAttempt` in den Einstellungen gesetzt; ist die laufende Version danach noch älter, gilt der Versuch als fehlgeschlagen und wird nicht automatisch wiederholt. Ein Protokoll schreibt Velopack nach `%LOCALAPPDATA%\NXPresent\velopack.log`.
 
-Die automatische Installation beim Start gilt nur, solange das Programm schwarz ist und kein Übergang läuft (`UpdateIsSafe`); sie wird direkt vor dem Start des Setups noch einmal geprüft.
+Die automatische Installation beim Start gilt nur, solange das Programm schwarz ist und kein Übergang läuft (`UpdateIsSafe`); sie wird direkt vor dem Start des Updaters noch einmal geprüft.
+
+**Ausprobieren vor der Veröffentlichung:** Die Umgebungsvariable `NXPRESENT_UPDATE_SOURCE` richtet die Suche auf einen Ordner oder eine Adresse mit einer Update-Liste statt auf GitHub. Zwei Versionen mit `Build.ps1 -Installer` in denselben Ordner `artifacts/release` packen (zuerst die ältere), die ältere in einen neuen leeren Ordner installieren (`NXPresent-win-Setup.exe --silent --installto <Ordner>`), die Variable setzen, starten und unter Setup → Updates nach der neueren suchen. Danach mit `Update.exe --silent uninstall` aus dem Installationsordner entfernen, den Ordner nicht wiederverwenden und `artifacts/` aufräumen.
 
 ## Veröffentlichen
 
-1. Version (`<Version>` in `src/NX-Present/NX-Present.csproj`) und Änderungsübersicht aktualisieren.
-2. Projekt bauen, Validierung mit `-Media` ausführen und Setup erzeugen.
-3. Installation, Start, Ausgabe mit echtem Beamer, CUT, AUTO, Video und Webseite, Schwarzbild, Notausstieg, Update von der vorherigen Version (Setup-Karte und Start-Prüfung) und Deinstallation prüfen.
+Der Ablauf steht im Projekt-Skill `.claude/skills/release`. Kurz:
+
+1. Version (`<Version>` in `src/NX-Present/NX-Present.csproj`) und Abschnitt `## X.Y.Z – Titel` der `CHANGELOG.md` aktualisieren; `Build.ps1` übernimmt ihn als Versionshinweise.
+2. Projekt bauen, Validierung mit `-Media` ausführen und das Setup erzeugen: `.\scripts\Build.ps1 -Installer -Media`.
+3. Installation, Start, Ausgabe mit echtem Beamer, CUT, AUTO, Video und Webseite, Schwarzbild, Notausstieg, Update von der vorherigen Version (Setup-Karte und Start-Prüfung, siehe „Ausprobieren vor der Veröffentlichung“) und Deinstallation prüfen.
 4. Fremdlizenzen und zugehörige Quellpakete prüfen und beilegen.
-5. Ausschließlich im offiziellen Repository veröffentlichen, als Veröffentlichung mit dem Tag `vX.Y.Z`, ohne Haken bei „Vorabversion“: `NX-Present-Setup-X.Y.Z-x64.exe`, `SHA256SUMS.txt` (beide aus `artifacts/release`, die Namen dürfen nicht geändert werden) und Fremdquellen. Fehlt eine der beiden ersten Dateien, bieten Anwendungen die Version nicht als Update an.
+5. Ausschließlich im offiziellen Repository veröffentlichen, als Veröffentlichung mit dem Tag `vX.Y.Z`, ohne Haken bei „Vorabversion“: **alle** Dateien aus `artifacts/release` (`NXPresent-win-Setup.exe`, `NXPresent-win-Portable.zip`, `NXPresent-X.Y.Z-full.nupkg`, eventuelle `-delta`-Pakete, `releases.win.json`, `RELEASES-win`, `SHA256SUMS.txt`, die Namen dürfen nicht geändert werden) und die Fremdquellen. Fehlt das volle Paket oder die Update-Liste, finden installierte Kopien die Version nicht.
 
-Der Installer wird hier ohne eigenes Code-Signing-Zertifikat gebaut. Für eine später signierte Veröffentlichung muss der Herausgeber selbst ein passendes Zertifikat bzw. einen Signierdienst bereitstellen; Schlüssel gehören nicht in das Repository.
-
-### Plugin-Katalog der Video-Engine
-
-Das Buildskript übernimmt einen zu VideoLAN 3.0.24 / Windows x64 gehörenden Plugin-Katalog. Vorher prüft es die SHA-256-Werte des Katalogs, der Video-Engine und aller 321 Plugin-DLLs. Die Zeitstempel der verifizierten Builddateien werden auf die Katalogwerte normalisiert; der Installer erhält diese Dateizeiten. Dadurch muss die Video-Engine beim ersten normalen Start nicht sämtliche Plugins zur Katalogerstellung laden.
-
-Bei einem Wechsel der nativen VideoLAN-Version oder des Plugin-Satzes muss der Katalog neu erzeugt und geprüft werden. Einfach den Hashvergleich abzuschalten ist kein Versionswechsel. Die Anwendung selbst sperrt geänderte LGPL-Bibliotheken nicht; nach Änderungen kann VLC seinen eigenen Katalog neu erstellen.
-
-Die zugehörigen Originalquellen lassen sich mit `scripts/Get-ThirdPartySources.ps1` anhand des eingecheckten Manifests beziehen. Der offizielle Release stellt sie zusätzlich als eigenes ZIP-Archiv bereit.
+Das Setup wird hier ohne eigenes Code-Signing-Zertifikat gebaut. Für eine später signierte Veröffentlichung muss der Herausgeber selbst ein passendes Zertifikat bzw. einen Signierdienst bereitstellen; Schlüssel gehören nicht in das Repository.
