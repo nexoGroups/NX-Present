@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ public partial class App : System.Windows.Application
         {
             Title = "NX-Present · Startet", Width = 480, Height = 180, ResizeMode = ResizeMode.NoResize,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Background = new SolidColorBrush(Color.FromRgb(27, 27, 29)), Foreground = Brushes.White,
+            Background = (Brush)Resources["Bg"], Foreground = (Brush)Resources["Ink"],
             Content = new TextBlock { Text = "NX-Present\n\nMedien-Engine wird gestartet …", FontSize = 20, Margin = new Thickness(28), VerticalAlignment = VerticalAlignment.Center }
         };
         splash.Show();

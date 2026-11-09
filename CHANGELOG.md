@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.5.0 – NX-UI-System
+
+- Bildmischer, Cue Mode und Setup verwenden das dunkle NX-UI-System mit Inter, blauen Bedienelementen und einheitlichen Karten, Menüs und Eingabefeldern.
+- Im Mischer stehen die Monitore im Vordergrund. Übergangsart, Dauer, Überblender und Live-Tasten liegen in einer Leiste. Der Medienpool scrollt waagerecht. Audio, Bild und Details zur Vorschau findest du unter **Optionen**.
+- Im Cue Mode lässt die flachere Startleiste mehr Platz für den Ablauf.
+- Der Überblender verwendet den NX-Griff und zeigt den Fortschritt in Blau an. Rot kennzeichnet weiterhin das Programm, Grün die Vorschau.
+- Gegenüber 0.3.1 kommen der Bildmischer und die Cue-Liste hinzu. Das Windows-Setup wechselt zu Velopack und unterstützt automatische Updates. Einzelheiten stehen unter 0.4.0.
+
+Wer 0.3.1 installiert hat, startet das neue Setup einmal von Hand. Die Einstellungen werden beim Wechsel übernommen.
+
 ## 0.4.0 – Bildmischer
 
 Die Bedienung ist neu aufgebaut wie ein Videomischer.

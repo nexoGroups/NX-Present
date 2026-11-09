@@ -2,8 +2,8 @@
 using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace NXPresent;
@@ -11,20 +11,18 @@ namespace NXPresent;
 public partial class MainWindow
 {
     private static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
-    private readonly System.Collections.Generic.List<RadioButton> styleKeys = new();
     private bool syncingControls;
     private Brush programBrush = Brushes.Red, raisedBrush = Brushes.Gray, lineBrush = Brushes.Gray, inkBrush = Brushes.White;
 
     private void BuildTransitionControls()
     {
         foreach (var kind in Transitions.Styles)
+            TransitionPicker.Items.Add(new ComboBoxItem { Content = Transitions.Label(kind), Tag = kind });
+        TransitionPicker.SelectionChanged += (_, _) =>
         {
-            var key = new RadioButton { Content = Transitions.ShortLabel(kind), Style = (Style)FindResource("StyleKey"), GroupName = "TransitionStyle", Tag = kind, ToolTip = Transitions.Label(kind) };
-            AutomationProperties.SetName(key, "Übergang " + Transitions.Label(kind));
-            key.Checked += (sender, _) => { if (!syncingControls && interfaceReady) switcher.Style = (TransitionKind)((RadioButton)sender).Tag; };
-            styleKeys.Add(key);
-            StylePanel.Children.Add(key);
-        }
+            if (!syncingControls && interfaceReady && TransitionPicker.SelectedItem is ComboBoxItem { Tag: TransitionKind kind })
+                switcher.Style = kind;
+        };
         foreach (int milliseconds in new[] { 250, 500, 750, 1000, 1500, 2000, 3000, 5000 }) DurationPicker.Items.Add(DurationItem(milliseconds));
         DurationPicker.SelectionChanged += (_, _) =>
         {
@@ -33,6 +31,14 @@ public partial class MainWindow
         TransitionBar.UserMoved += value => switcher.SetManual(value);
     }
     private static ComboBoxItem DurationItem(int milliseconds) => new() { Content = (milliseconds / 1000.0).ToString("0.##", German) + " s", Tag = milliseconds };
+
+    private void PoolMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        var pool = (ScrollViewer)sender;
+        if (pool.ScrollableWidth <= 0) return;
+        pool.ScrollToHorizontalOffset(pool.HorizontalOffset - e.Delta);
+        e.Handled = true;
+    }
 
     private void InitializeInterface()
     {
@@ -50,7 +56,7 @@ public partial class MainWindow
             if ((change & SwitcherChange.Feeds) != 0) { SyncTally(); SyncInfo(); }
             if ((change & SwitcherChange.Settings) != 0)
             {
-                foreach (var key in styleKeys) key.IsChecked = (TransitionKind)key.Tag == switcher.Style;
+                TransitionPicker.SelectedItem = TransitionPicker.Items.Cast<ComboBoxItem>().FirstOrDefault(x => (TransitionKind)x.Tag == switcher.Style);
                 var match = DurationPicker.Items.Cast<ComboBoxItem>().FirstOrDefault(x => (int)x.Tag == switcher.DurationMilliseconds);
                 if (match == null)
                 {
@@ -118,8 +124,6 @@ public partial class MainWindow
         bool active = output != null;
         OutputBadge.Text = active ? "AUSGABE AKTIV" : "AUSGABE AUS";
         OutputDot.Fill = (Brush)FindResource(active ? "Program" : "Dim");
-        OutputStateDot.Fill = (Brush)FindResource(active ? "Program" : "Dim");
-        OutputState.Text = active ? "Ausgabe aktiv" : "Ausgabe geschlossen";
         OutputDetail.Text = active ? (DisplayPicker.SelectedItem as DisplayChoice)?.Label ?? "" : DisplayPicker.SelectedItem is DisplayChoice choice ? "Bereit für " + choice.Label : "Wähle unter Setup den Beamer.";
         OutputToggleButton.Content = active ? "Ausgabe schließen" : "Ausgabe starten";
         OutputToggleButton.Style = (Style)FindResource(active ? "DangerButton" : "PrimaryButton");

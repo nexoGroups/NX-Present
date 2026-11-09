@@ -6,7 +6,9 @@ param(
     [switch]$Media,
     # For CI jobs that run the validation on their own.
     [switch]$SkipValidation,
-    [string]$DotNet = 'dotnet'
+    [string]$DotNet = 'dotnet',
+    # Set a separate directory to keep assets from an earlier build out of this release.
+    [string]$ReleaseDirectory = 'artifacts/release'
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -23,7 +25,7 @@ try {
     $version = [string]$project.Project.PropertyGroup.Version
     $buildId = Get-Date -Format 'yyyyMMdd-HHmmss'
     $appDir = Join-Path $root "artifacts/publish/$version/$buildId"
-    $releaseDir = Join-Path $root 'artifacts/release'
+    $releaseDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ReleaseDirectory)
     New-Item -ItemType Directory -Path $appDir,$releaseDir -Force | Out-Null
     Invoke-DotNet -Arguments @('restore','src/NX-Present/NX-Present.csproj','--locked-mode')
     Invoke-DotNet -Arguments @('build','src/NX-Present/NX-Present.csproj','-c','Release','--no-restore')
@@ -70,6 +72,7 @@ try {
             'pack',
             '--packId', $packId,
             '--packVersion', $version,
+            '--runtime', 'win-x64',
             '--packDir', $appDir,
             '--mainExe', $mainExe,
             '--packTitle', 'NX-Present',

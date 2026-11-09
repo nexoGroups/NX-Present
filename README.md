@@ -21,7 +21,7 @@ Vorschau wählen, Programm sehen, mit AUTO überblenden.
 
 NX-Present ist ein Show-Control-Programm für Windows, aufgebaut wie ein Videomischer. Der **Programm-Monitor** zeigt in Echtzeit genau das Bild, das auf der Leinwand steht, auch bei Videos und Webseiten. Im **Vorschau-Monitor** bereitest du die nächste Quelle vor. **CUT** schaltet sie sofort auf Programm, **AUTO** blendet automatisch über, und mit dem **Überblender** mischst du von Hand.
 
-> **Stand dieser Beschreibung:** Sie folgt dem Quellcode auf `main` (Version **0.4.0**, der Bildmischer). Der Installer dieser Version erscheint mit der nächsten Veröffentlichung. Ältere Installer, etwa 0.3.1, haben noch die frühere Oberfläche. Bis dahin lässt sich 0.4.0 [selbst bauen](#selbst-bauen).
+> **Stand dieser Beschreibung:** NX-Present **0.5.0** verwendet das dunkle NX-UI-System im Bildmischer, im Cue Mode und im Setup. Der aktuelle Entwicklungsstand lässt sich [selbst bauen](#selbst-bauen).
 
 ## Wofür ist NX-Present gedacht?
 
@@ -52,14 +52,14 @@ Das eignet sich für private Präsentationen, Hobbyprojekte und ehrenamtliche Ve
 
 ### Sechs Übergänge
 
-| Taste | Übergang | Wirkung |
-| --- | --- | --- |
-| MIX | Überblenden | Das neue Bild blendet über das alte |
-| DIP | Über Schwarz | Das alte Bild blendet nach Schwarz, das neue aus Schwarz |
-| WIPE → | Wischen waagerecht | Eine weiche Kante zieht waagerecht über das Bild |
-| WIPE ↓ | Wischen senkrecht | Eine weiche Kante zieht senkrecht über das Bild |
-| IRIS | Iris | Das neue Bild öffnet sich als wachsender Kreis aus der Mitte |
-| PUSH | Schieben | Das neue Bild schiebt das alte nach links aus dem Bild |
+| Übergang | Wirkung |
+| --- | --- |
+| Überblenden | Das neue Bild blendet über das alte |
+| Über Schwarz | Das alte Bild blendet nach Schwarz, das neue aus Schwarz |
+| Wischen → | Eine weiche Kante zieht waagerecht über das Bild |
+| Wischen ↓ | Eine weiche Kante zieht senkrecht über das Bild |
+| Iris | Das neue Bild öffnet sich als wachsender Kreis aus der Mitte |
+| Schieben | Das neue Bild schiebt das alte nach links aus dem Bild |
 
 ### Quellen im Medienpool
 

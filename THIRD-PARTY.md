@@ -10,11 +10,12 @@ Die Projektlizenz von NX-Present gilt ausschließlich für den eigenen Programmc
 | Native Video-/Audio-Abhängigkeiten von VLC | Versionen gemäß VLC-3.0.24-Contrib-Rezepten | Eigene MIT-/BSD-/LGPL- und weitere Lizenztexte in ihren unveränderten Quellarchiven. Die VLC-Quellen enthalten die zugehörigen Buildrezepte und Patches unter `contrib/src` sowie Windows-Buildskripte unter `extras/package/win32`. |
 | Microsoft.Web.WebView2 SDK | 1.0.4314.35 | Microsoft-Lizenz; [SDK-Lizenz](licenses/WebView2-SDK-LICENSE.txt), [NuGet-Paket](https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4314.35) |
 | Velopack | 1.2.161 | MIT; Setup, Updater (`Update.exe`) und die Update-Bibliothek in der Anwendung. [Quellcode](https://github.com/velopack/velopack), [Lizenztext](licenses/Velopack-LICENSE.txt) |
+| Inter | NX-UI-System | SIL Open Font License 1.1. [Lizenztext](licenses/Inter-LICENSE.txt) |
 | Microsoft Edge WebView2 Runtime | Evergreen | Wird bei Bedarf vom Setup über Microsofts offizielle Quelle installiert. [Verteilungshinweise](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution) |
 
 ## Quellcode und Hinweise
 
-Neben dem Windows-Installer stellt die offizielle Veröffentlichung ein separates Archiv **NX-Present-ThirdParty-Sources-0.4.0.zip** bereit. Es enthält die unveränderten VLC- und LibVLCSharp-Quellen, den verwendeten Paketierungsquellstand, Quellarchive der Video-/Audio-Abhängigkeiten und ein Manifest mit Bezugsadressen und Prüfsummen. Diese Quellen und die darin enthaltenen Lizenz- und Copyrightdateien behalten ihre jeweiligen ursprünglichen Lizenzen. Sie fallen ausdrücklich nicht unter das Weitergabeverbot für NX-Present.
+Neben dem Windows-Installer stellt die offizielle Veröffentlichung ein separates Archiv **NX-Present-ThirdParty-Sources-0.5.0.zip** bereit. Es enthält die unveränderten VLC- und LibVLCSharp-Quellen, den verwendeten Paketierungsquellstand, Quellarchive der Video-/Audio-Abhängigkeiten und ein Manifest mit Bezugsadressen und Prüfsummen. Diese Quellen und die darin enthaltenen Lizenz- und Copyrightdateien behalten ihre jeweiligen ursprünglichen Lizenzen. Sie fallen ausdrücklich nicht unter das Weitergabeverbot für NX-Present.
 
 Die Windows-NuGet-Paketierung trennt GPL-Plugins in ein eigenes Paket. Die verwendete LGPL-Ausgabe schließt diese Plugins aus; das Paketierungsverfahren ist im mitgelieferten Quellstand dokumentiert. Die unveränderten VLC-Quellen enthalten zusätzlich GPL-lizenzierte Programmteile, die nicht Bestandteil der NX-Present-Anwendung sind. Die Beigabe des GPL-Lizenztextes für diese Quellen bedeutet keine Umlizenzierung von NX-Present unter die GPL.
 

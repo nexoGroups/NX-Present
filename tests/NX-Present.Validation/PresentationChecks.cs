@@ -332,7 +332,7 @@ static class PresentationChecks
             auto.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(450);
             check(mixer.IsAutoRunning && mixer.Position > .1 && mixer.Position < .9, $"AUTO runs a transition in real time (position {mixer.Position:0.00})");
-            check(auto.IsEnabled && auto.Background is SolidColorBrush { Color: { R: 0xE5, G: 0x37, B: 0x2E } }, "While it runs, the AUTO key is lit red and stays fully visible");
+            check(auto.IsEnabled && auto.Background is SolidColorBrush { Color: { R: 0xFF, G: 0x45, B: 0x3A } }, "While it runs, the AUTO key uses the NX program red and stays fully visible");
             var bar = (TBar)window.FindName("TransitionBar");
             check(bar.Value > .1 && bar.Value < .9 && !bar.IsEnabled, "The T-bar follows the automatic transition");
             SavePng(Capture(window, 1600, 960), Path.Combine(folder, "mixer-ui-transition.png"));
@@ -353,10 +353,9 @@ static class PresentationChecks
             check(!mixer.IsTransitioning && mixer.Program.Cue == pool[1], "CUT finishes a running transition at once");
 
             // Style and duration controls.
-            var stylePanel = (StackPanel)window.FindName("StylePanel");
-            var wipe = stylePanel.Children.OfType<RadioButton>().First(x => (TransitionKind)x.Tag == TransitionKind.WipeHorizontal);
-            wipe.IsChecked = true;
-            check(mixer.Style == TransitionKind.WipeHorizontal, "A style key selects the transition");
+            var transition = (ComboBox)window.FindName("TransitionPicker");
+            transition.SelectedItem = transition.Items.OfType<ComboBoxItem>().First(x => (TransitionKind)x.Tag == TransitionKind.WipeHorizontal);
+            check(mixer.Style == TransitionKind.WipeHorizontal, "The transition picker applies the selected transition");
             var duration = (ComboBox)window.FindName("DurationPicker");
             duration.SelectedIndex = 0;
             check(mixer.DurationMilliseconds == 250, "The duration box sets the transition time");
@@ -378,6 +377,15 @@ static class PresentationChecks
             var smallProgram = ((MonitorView)window.FindName("ProgramMonitor")).Picture;
             check(smallProgram.ActualWidth >= 250 && smallProgram.ActualHeight >= 140, $"At the minimum size the monitors are still usable ({smallProgram.ActualWidth:0} x {smallProgram.ActualHeight:0})");
             SavePng(Capture(window, 1180, 740), Path.Combine(folder, "mixer-ui-small.png"));
+            var mixerOptions = (ScrollViewer)window.FindName("InspectorPanel");
+            var options = (ToggleButton)window.FindName("InspectorToggle");
+            check(!mixerOptions.IsVisible, "The mixer opens with secondary controls collapsed");
+            options.IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            window.UpdateLayout();
+            check(mixerOptions.IsVisible && bar2.ActualWidth >= 150 && smallProgram.ActualWidth >= 250,
+                "The options panel opens without obscuring the monitors or transition controls");
+            options.IsChecked = false;
 
             // The cue page at the smallest size, with a rundown that uses every kind of cue.
             var cuePage = (CueModeView)window.FindName("CueModePage");

@@ -30,14 +30,13 @@
   <Grid.ColumnDefinitions><ColumnDefinition Width="212"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="290"/></Grid.ColumnDefinitions>
 
   <!-- Run bar: GO, stop, playhead -->
-  <Border Grid.ColumnSpan="5" Style="{StaticResource PanelBorder}" Padding="14,10" Margin="0,0,0,10"><Grid>
+  <Border Grid.ColumnSpan="5" Style="{StaticResource PanelBorder}" Padding="12,6" Margin="0,0,0,10"><Grid>
    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-   <Button x:Name="GoButton" Focusable="False" Click="GoClicked" Style="{StaticResource PrimaryButton}" Padding="26,4" MinWidth="150" Height="54" IsEnabled="False" ToolTip="Den Cue an der Marke starten (Leertaste, Strg + Enter)" AutomationProperties.Name="GO"><StackPanel><TextBlock Text="GO" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="LEERTASTE" FontSize="8" FontWeight="SemiBold" HorizontalAlignment="Center" Opacity="0.7"/></StackPanel></Button>
-   <Button x:Name="StopButton" Focusable="False" Grid.Column="1" Click="StopClicked" Style="{StaticResource DangerButton}" Margin="10,0,0,0" MinWidth="92" Height="54" IsEnabled="False" ToolTip="Alle wartenden und laufenden Cues stoppen (Esc). Ein laufender Übergang endet von selbst." AutomationProperties.Name="Stopp"><StackPanel><TextBlock Text="STOPP" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="ESC" FontSize="8" FontWeight="SemiBold" HorizontalAlignment="Center" Opacity="0.7"/></StackPanel></Button>
-   <Button x:Name="ResetButton" Focusable="False" Grid.Column="2" Click="ResetClicked" Margin="10,0,0,0" MinWidth="92" Height="54" ToolTip="Die Marke an den Anfang setzen. Das Programm bleibt unverändert." AutomationProperties.Name="Zurück an den Anfang"><StackPanel><TextBlock Text="ZURÜCK" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="AN DEN ANFANG" FontSize="8" FontWeight="SemiBold" HorizontalAlignment="Center" Opacity="0.7"/></StackPanel></Button>
-   <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="22,0,12,0">
-    <TextBlock Text="MARKE · NÄCHSTER CUE" Style="{StaticResource Eyebrow}" FontSize="9"/>
-    <TextBlock x:Name="NextText" Text="Kein Cue" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+   <Button x:Name="GoButton" Content="GO" Focusable="False" Click="GoClicked" Style="{StaticResource PrimaryButton}" Width="88" Height="36" IsEnabled="False" ToolTip="Den Cue an der Marke starten (Leertaste, Strg + Enter)" AutomationProperties.Name="GO"/>
+   <Button x:Name="StopButton" Content="Stopp" Focusable="False" Grid.Column="1" Click="StopClicked" Style="{StaticResource DangerButton}" Margin="6,0,0,0" Height="36" IsEnabled="False" ToolTip="Alle wartenden und laufenden Cues stoppen (Esc)" AutomationProperties.Name="Stopp"/>
+   <Button x:Name="ResetButton" Content="Zum Anfang" Focusable="False" Grid.Column="2" Click="ResetClicked" Style="{StaticResource QuietButton}" Margin="6,0,0,0" Height="36" ToolTip="Die Marke an den Anfang setzen" AutomationProperties.Name="Zurück an den Anfang"/>
+   <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="16,0,12,0">
+    <TextBlock x:Name="NextText" Text="Kein Cue" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" AutomationProperties.Name="Nächster Cue"/>
     <TextBlock x:Name="RunStatus" Style="{StaticResource Hint}" FontSize="11" LineHeight="14" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="0,2,0,0"/>
    </StackPanel>
    <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="0,0,16,0">
@@ -50,7 +49,7 @@
   <!-- Sources from the pool -->
   <Border x:Name="SourcePanel" Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="12">
    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <StackPanel><TextBlock Text="QUELLEN" Style="{StaticResource SectionTitle}"/><TextBlock Text="Aus dem Medienpool" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10"/></StackPanel>
+    <TextBlock Text="Quellen" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
     <Grid Grid.Row="1" Margin="0,0,0,8"><TextBox x:Name="SourceSearch" TextChanged="SourceSearchChanged" ToolTip="Medienpool durchsuchen" AutomationProperties.Name="Quellen für den Cue-Ablauf durchsuchen" Padding="26,5,8,5"/><TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/><TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SourceSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
     <ListBox x:Name="SourceList" Grid.Row="2" SelectionChanged="SourceSelectionChanged" MouseDoubleClick="SourceDoubleClicked" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" AutomationProperties.Name="Verfügbare Cue-Quellen"><ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold"/><TextBlock Text="{Binding Category}" Style="{StaticResource Eyebrow}" FontSize="9" Margin="0,3,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
     <StackPanel Grid.Row="3" Margin="0,10,0,0"><Button x:Name="AddButton" Focusable="False" Content="+ Zum Ablauf" Click="AddClicked" Style="{StaticResource PrimaryButton}" IsEnabled="False" ToolTip="Die gewählte Quelle als Cue hinter der Marke einfügen (oder Doppelklick)"/><Button Content="Neue Inhalte im Mischer" Click="LibraryClicked" Style="{StaticResource QuietButton}" Margin="0,4,0,0" FontSize="11" ToolTip="Zur Seite Mischer wechseln"/></StackPanel>
@@ -73,9 +72,9 @@
       </ContextMenu></Button.ContextMenu></Button>
       <Button x:Name="UpButton" Focusable="False" Content="↑" Click="UpClicked" ToolTip="Cue nach oben" AutomationProperties.Name="Cue nach oben" MinHeight="26" Padding="0" Width="30" Margin="0,0,3,0"/>
       <Button x:Name="DownButton" Focusable="False" Content="↓" Click="DownClicked" ToolTip="Cue nach unten" AutomationProperties.Name="Cue nach unten" MinHeight="26" Padding="0" Width="30" Margin="0,0,5,0"/>
-      <Button x:Name="DuplicateButton" Focusable="False" Content="Duplizieren" Click="DuplicateClicked" MinHeight="26" Padding="9,2" Margin="0,0,5,0"/>
-      <Button x:Name="RemoveButton" Focusable="False" Content="Entfernen" Click="RemoveClicked" MinHeight="26" Padding="9,2" Margin="0,0,5,0"/>
-      <Button x:Name="RenumberButton" Focusable="False" Content="Nummern" Click="RenumberClicked" MinHeight="26" Padding="9,2" ToolTip="Alle Cues von oben nach unten mit 1, 2, 3 … nummerieren"/>
+      <Button x:Name="DuplicateButton" Focusable="False" Content="Duplizieren" Click="DuplicateClicked" Style="{StaticResource QuietButton}" MinHeight="26" Padding="9,2" Margin="0,0,5,0"/>
+      <Button x:Name="RemoveButton" Focusable="False" Content="Entfernen" Click="RemoveClicked" Style="{StaticResource QuietButton}" MinHeight="26" Padding="9,2" Margin="0,0,5,0"/>
+      <Button x:Name="RenumberButton" Focusable="False" Content="Nummern" Click="RenumberClicked" Style="{StaticResource QuietButton}" MinHeight="26" Padding="9,2" ToolTip="Alle Cues von oben nach unten mit 1, 2, 3 … nummerieren"/>
      </StackPanel>
     </Grid>
     <Grid Grid.Row="1" Margin="1,0,13,5">

@@ -23,7 +23,7 @@ Die Seite **Mischer** ist wie ein Videomischer aufgebaut.
 - **CUT** (Eingabetaste) schaltet die Vorschau sofort auf Programm.
 - **AUTO** (Leertaste, Strg + Enter) blendet mit dem gewählten Übergang und der eingestellten **Dauer** über. Ein Video startet erst mit der Blende, sein Ton blendet mit. Der Knopf leuchtet rot und zeigt den Fortschritt.
 - **Überblender:** Ziehe ihn von links nach rechts, um von Hand zu mischen. Am rechten Ende wird die Vorschau zum Programm; zurück am Anfang wird der Übergang abgebrochen. Drückst du AUTO bei halb gezogenem Überblender, läuft der Rest der Blende automatisch.
-- **Übergangsarten:** MIX (Überblenden), DIP (über Schwarz), WIPE → und WIPE ↓ (Wischen), IRIS und PUSH (Schieben).
+- **Übergangsart:** Wähle in der Leiste unter den Monitoren zwischen Überblenden, Über Schwarz, Wischen, Iris und Schieben. Daneben stellst du die Dauer ein.
 - **CUT während einer Blende** beendet sie sofort.
 
 Nach jedem Übergang tauschen Programm und Vorschau die Plätze: Die bisherige Quelle liegt nun in der Vorschau. Ein Video steht dort wieder auf seinem ersten Bild. So kannst du mit AUTO zwischen zwei Quellen hin und her blenden.
@@ -37,13 +37,13 @@ Der Vorschau-Monitor bleibt bei beidem unverändert.
 
 ### Ton und Bild
 
-Im Bereich **Audio** rechts stellst du die Hauptlautstärke ein, schaltest **Stumm** (M) und wählst, ob Videos wiederholt werden. Unter **Bild** legst du fest, wie Bilder und Videos auf die Fläche passen (Einpassen, Füllen, Strecken) und ob Testbilder animiert sind.
+Öffne **Optionen** in der Titelleiste. Unter **Audio** stellst du die Hauptlautstärke ein, schaltest **Stumm** (M) und wählst, ob Videos wiederholt werden. Unter **Bild** legst du fest, wie Bilder und Videos auf die Fläche passen (Einpassen, Füllen, Strecken) und ob Testbilder animiert sind.
 
 ## Quellen hinzufügen
 
-**+ Hinzufügen** im Medienpool bietet Bilder und Videos, Webseiten, Text und die Uhr. Dateien lassen sich auch in das Fenster ziehen. Fotos aus Kameras und Telefonen stehen aufrecht, auch wenn sie im Hochformat aufgenommen wurden.
+**+ Hinzufügen** im Medienpool bietet Bilder und Videos, Webseiten, Text und die Uhr. Dateien lassen sich auch in das Fenster ziehen. Mit dem Mausrad blätterst du waagerecht durch die Quellen. Fotos aus Kameras und Telefonen stehen aufrecht, auch wenn sie im Hochformat aufgenommen wurden.
 
-Eine Webseite läuft in einem unsichtbaren Browser und erscheint wie jede andere Quelle. Sie lässt sich in dieser Fassung nicht bedienen; **Webseite neu laden** findest du rechts unter **Quelle in der Vorschau**. Der Ton einer Webseite schaltet bei einer Blende um, ohne zu überblenden.
+Eine Webseite läuft in einem unsichtbaren Browser und erscheint wie jede andere Quelle. **Webseite neu laden** findest du unter **Optionen → Quelle in der Vorschau**. Der Ton einer Webseite schaltet bei einer Blende um.
 
 ## Cue Mode: eine Show fahren
 

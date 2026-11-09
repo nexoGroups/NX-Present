@@ -1,4 +1,13 @@
-# Releaseprüfung 0.4.0
+# Releaseprüfung
+
+## 0.5.0
+
+- Release-Build ohne Warnungen oder Fehler. Alle 371 Prüfungen der Standardsuite bestanden.
+- Bildmischer, Cue Mode und Setup anhand von gerenderten Fenstern geprüft. Bei 1180 × 740 bleiben die Monitore und die Übergangsleiste auch mit geöffneten Optionen bedienbar.
+- Die erweiterte Medienprüfung bricht beim erneuten Vorladen eines laufenden Videos ab. Derselbe Test scheitert im unveränderten Ausgangsstand `1d1adcc`.
+- Ein Installationswechsel von 0.3.1, ein Update über GitHub, Smart App Control und die Ausgabe auf einem Beamer wurden nicht geprüft.
+
+## 0.4.0
 
 Stand: 31.10.2026, gebaut mit `scripts/Build.ps1 -Installer -Media`.
 

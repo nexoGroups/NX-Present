@@ -375,9 +375,6 @@ public partial class MainWindow : Window
         var now = DateTime.Now;
         string time = ClockView.TimeText(now);
         if (ControlClock.Text != time) ControlClock.Text = time;
-        if (InspectorClock.Text != time) InspectorClock.Text = time;
-        string date = now.ToString("dddd, dd. MMMM yyyy", CultureInfo.GetCultureInfo("de-DE"));
-        if (ControlDate.Text != date) ControlDate.Text = date;
     }
 
     private void WindowClosing(object? sender, CancelEventArgs e)

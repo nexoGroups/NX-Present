@@ -10,7 +10,7 @@ public sealed class TBar : FrameworkElement
 {
     public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(nameof(Value), typeof(double), typeof(TBar),
         new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender, null, (_, value) => Math.Clamp((double)value, 0, 1)));
-    private const double Inset = 16, HandleWidth = 22, HandleHeight = 38;
+    private const double Inset = 16, HandleWidth = 22, HandleHeight = 34;
     public double Value { get => (double)GetValue(ValueProperty); set => SetValue(ValueProperty, value); }
     public bool IsDragging { get; private set; }
     /// <summary>The user moved the handle.</summary>
@@ -27,10 +27,10 @@ public sealed class TBar : FrameworkElement
         if (w <= Inset * 2) return;
         double left = Inset, right = w - Inset, x = left + Value * (right - left);
         var groove = new Rect(left, mid - 4, right - left, 8);
-        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0x11, 0x11, 0x13)), new Pen(new SolidColorBrush(Color.FromRgb(0x44, 0x44, 0x4B)), 1), groove, 4, 4);
+        dc.DrawRoundedRectangle(ThemeBrush("Inset"), new Pen(ThemeBrush("LineStrong"), 1), groove, 4, 4);
         // A handle that moved less than a pixel has no filled part yet; a negative width would make WPF refuse the layout.
-        if (x - left > 1) dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(0xF0, 0xA6, 0x3A)), null, new Rect(left + 1, mid - 3, x - left - 1, 6), 3, 3);
-        var tick = new Pen(new SolidColorBrush(Color.FromRgb(0x6A, 0x6A, 0x72)), 1);
+        if (x - left > 1) dc.DrawRoundedRectangle(ThemeBrush("Accent"), null, new Rect(left + 1, mid - 3, x - left - 1, 6), 3, 3);
+        var tick = new Pen(ThemeBrush("Dim"), 1);
         for (int i = 0; i <= 4; i++)
         {
             double tx = left + (right - left) * i / 4;
@@ -38,10 +38,17 @@ public sealed class TBar : FrameworkElement
             dc.DrawLine(tick, new Point(tx, mid + 11), new Point(tx, mid + 18));
         }
         var handle = new Rect(x - HandleWidth / 2, mid - HandleHeight / 2, HandleWidth, HandleHeight);
-        var body = new LinearGradientBrush(Color.FromRgb(0xEE, 0xEE, 0xF1), Color.FromRgb(0xA9, 0xA9, 0xB1), 90);
-        dc.DrawRoundedRectangle(body, new Pen(new SolidColorBrush(Color.FromRgb(0x0B, 0x0B, 0x0C)), 1), handle, 4, 4);
-        var grip = new Pen(new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x5C)), 1);
-        for (int i = -1; i <= 1; i++) dc.DrawLine(grip, new Point(x + i * 4, mid - 11), new Point(x + i * 4, mid + 11));
+        var body = ThemeBrush(IsMouseOver ? "CapHover" : "Cap");
+        dc.DrawRoundedRectangle(body, new Pen(ThemeBrush("CapBorder"), 1), handle, 6, 6);
+        dc.DrawLine(new Pen(ThemeBrush("Ink"), 1), new Point(x, mid - 8), new Point(x, mid + 8));
+    }
+
+    private Brush ThemeBrush(string key) => (Brush)FindResource(key);
+
+    protected override void OnIsMouseDirectlyOverChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnIsMouseDirectlyOverChanged(e);
+        InvalidateVisual();
     }
 
     private double ValueAt(double x) => Math.Clamp((x - Inset) / Math.Max(1, ActualWidth - Inset * 2), 0, 1);

@@ -1,20 +1,21 @@
-﻿<Window x:Class="NXPresent.MainWindow"
+<Window x:Class="NXPresent.MainWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:local="clr-namespace:NXPresent" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
  Title="NX-Present · Bildmischer" Width="1600" Height="960" MinWidth="1180" MinHeight="740"
  WindowStyle="None" ResizeMode="CanResize" Background="{StaticResource Bg}" Foreground="{StaticResource Ink}"
- FontFamily="Segoe UI" FontSize="12" UseLayoutRounding="True"
+ FontFamily="{StaticResource NxFont}" FontSize="12" UseLayoutRounding="True"
  AllowDrop="True" Drop="FilesDropped" Closing="WindowClosing" PreviewKeyDown="WindowKeyDown">
  <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="36" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
  <Window.Resources>
+  <BooleanToVisibilityConverter x:Key="ShowWhenChecked"/>
   <!-- A key on the program or preview bus. The tally colour comes from the source it stands for. -->
   <Style x:Key="BusKeyBase" TargetType="Button">
-   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="96"/><Setter Property="Height" Value="46"/><Setter Property="Margin" Value="0,0,4,0"/><Setter Property="Cursor" Value="Hand"/>
-   <Setter Property="Background" Value="#2C2C31"/><Setter Property="BorderBrush" Value="#46464D"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
+   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="84"/><Setter Property="Height" Value="36"/><Setter Property="Margin" Value="0,0,4,0"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Background" Value="{StaticResource Raised}"/><Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Grid>
-    <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"/>
-    <Border x:Name="Glow" Background="#22FFFFFF" CornerRadius="3" Opacity="0" IsHitTestVisible="False"/>
+    <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource NxControlRadius}"/>
+    <Border x:Name="Glow" Background="#22FFFFFF" CornerRadius="{StaticResource NxControlRadius}" Opacity="0" IsHitTestVisible="False"/>
     <ContentPresenter Margin="7,4"/>
    </Grid><ControlTemplate.Triggers>
     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Glow" Property="Opacity" Value="1"/></Trigger>
@@ -33,10 +34,10 @@
   </DataTemplate>
   <!-- A card in the media pool. -->
   <Style x:Key="PoolCard" TargetType="Button">
-   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="126"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="104"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="{StaticResource NxCardRadius}">
     <StackPanel>
-     <Grid Height="64" Margin="0,0,0,0" Background="#0D0D0F">
+     <Grid Height="49" Margin="0,0,0,0" Background="{StaticResource Inset}">
       <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
       <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasThumbnail}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
       <Border Background="#99000000" CornerRadius="2" Padding="4,1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4"><TextBlock Text="{Binding NumberLabel}" FontFamily="Consolas" FontSize="10" Foreground="White"/></Border>
@@ -59,6 +60,8 @@
    <Grid Margin="14,0,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="NX" Foreground="{StaticResource Accent}" FontWeight="Black" FontStyle="Italic" FontSize="17"/><TextBlock Text="PRESENT" FontWeight="SemiBold" FontSize="11" Margin="7,2,0,0" VerticalAlignment="Center"/><TextBlock x:Name="PageTitle" Text="Mischer" Style="{StaticResource Eyebrow}" FontSize="11" Margin="18,2,0,0" VerticalAlignment="Center"/></StackPanel>
     <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+     <ToggleButton x:Name="InspectorToggle" Content="Optionen" Visibility="{Binding Visibility, ElementName=MixerPage}" Margin="0,4,8,4" MinHeight="26" Padding="10,3" Focusable="False" ToolTip="Audio, Bild und Vorschauoptionen"/>
+     <Button x:Name="OutputToggleButton" Content="Ausgabe starten" Style="{StaticResource PrimaryButton}" Margin="0,4,8,4" MinHeight="26" Padding="10,3" Focusable="False" Click="ToggleOutput"/>
      <Button Click="OpenSettingsPage" Style="{StaticResource QuietButton}" MinHeight="0" Padding="10,0" Margin="0,0,10,0" ToolTip="Ausgabe und Geräte einrichten" Focusable="False"><StackPanel Orientation="Horizontal"><Ellipse x:Name="OutputDot" Width="7" Height="7" Fill="{StaticResource Dim}" Margin="0,0,7,0"/><TextBlock x:Name="OutputBadge" Text="AUSGABE AUS" FontFamily="Consolas" FontSize="11"/></StackPanel></Button>
      <TextBlock x:Name="ControlClock" Text="00:00:00" FontFamily="Consolas" FontSize="14" VerticalAlignment="Center" Margin="0,0,16,0"/>
      <Button Content="&#xE921;" FontFamily="Segoe MDL2 Assets" Style="{StaticResource QuietButton}" Width="44" MinHeight="0" Padding="0" Focusable="False" ToolTip="Minimieren" AutomationProperties.Name="Minimieren" Click="MinimizeWindow"/>
@@ -70,51 +73,59 @@
 
   <Grid Grid.Row="1">
    <!-- ============ MIXER ============ -->
-   <Grid x:Name="MixerPage" Margin="10,10,10,6">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="276"/></Grid.ColumnDefinitions>
+   <Grid x:Name="MixerPage" Margin="12,12,12,8">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <Grid>
-     <Grid.RowDefinitions><RowDefinition Height="5*" MinHeight="210"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="2*" MinHeight="104"/></Grid.RowDefinitions>
+     <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="238"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="132"/></Grid.RowDefinitions>
      <Grid Margin="0,0,0,8">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <local:MonitorView x:Name="PreviewMonitor" Mode="Preview" Heading="VORSCHAU"/>
       <local:MonitorView x:Name="ProgramMonitor" Grid.Column="2" Mode="Program" Heading="PROGRAMM"/>
      </Grid>
 
-     <!-- Transition panel -->
-     <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="14,10,14,12">
+     <!-- Transition controls stay together between the monitors and source buses. -->
+     <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="12,6">
       <Grid>
-       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="160"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-       <StackPanel>
-        <TextBlock Text="NÄCHSTER ÜBERGANG" Style="{StaticResource SectionTitle}"/>
-        <StackPanel x:Name="StylePanel" Orientation="Horizontal"/>
-        <StackPanel Orientation="Horizontal" Margin="0,10,0,0"><TextBlock Text="DAUER" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,10,0"/><ComboBox x:Name="DurationPicker" Width="104" MinHeight="28" ToolTip="Dauer des automatischen Übergangs" AutomationProperties.Name="Dauer des Übergangs" Focusable="False"/></StackPanel>
-       </StackPanel>
-       <StackPanel Grid.Column="1" Margin="22,0,22,0" VerticalAlignment="Center">
-        <Grid><TextBlock Text="ÜBERBLENDER" Style="{StaticResource SectionTitle}"/><TextBlock x:Name="TBarReadout" Text="0 %" Style="{StaticResource Mono}" HorizontalAlignment="Right" FontSize="12"/></Grid>
-        <local:TBar x:Name="TransitionBar" ToolTip="Von Hand überblenden: ziehen, bis die Vorschau auf Programm liegt" AutomationProperties.Name="Überblender"/>
-       </StackPanel>
-       <Grid Grid.Column="2" VerticalAlignment="Center">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <Button x:Name="CutButton" Width="104" Height="48" Focusable="False" Click="CutClicked" ToolTip="Vorschau sofort auf Programm schalten (Eingabetaste)" AutomationProperties.Name="Cut"><StackPanel><TextBlock Text="CUT" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="EINGABE" Style="{StaticResource Eyebrow}" FontSize="8" HorizontalAlignment="Center"/></StackPanel></Button>
-        <Button x:Name="AutoButton" Grid.Column="1" Width="104" Height="48" Margin="6,0,0,0" Padding="0" Focusable="False" Click="AutoClicked" ToolTip="Vorschau mit dem gewählten Übergang auf Programm blenden (Leertaste)" AutomationProperties.Name="Auto">
-         <Grid Width="104" Height="48"><Border x:Name="AutoFill" HorizontalAlignment="Left" Width="0" Background="#99600A0C" CornerRadius="3"/><StackPanel VerticalAlignment="Center"><TextBlock x:Name="AutoLabel" Text="AUTO" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="LEERTASTE" Style="{StaticResource Eyebrow}" FontSize="8" HorizontalAlignment="Center" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Opacity="0.7"/></StackPanel></Grid>
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="150"/>
+        <ColumnDefinition Width="44"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+       </Grid.ColumnDefinitions>
+       <ComboBox x:Name="TransitionPicker" Width="146" MinHeight="32" VerticalAlignment="Center" Focusable="False"
+                 ToolTip="Übergangsart" AutomationProperties.Name="Übergangsart"/>
+       <ComboBox x:Name="DurationPicker" Grid.Column="1" Width="84" MinHeight="32" VerticalAlignment="Center"
+                 Margin="6,0,8,0" Focusable="False" ToolTip="Dauer des automatischen Übergangs" AutomationProperties.Name="Dauer des Übergangs"/>
+       <local:TBar x:Name="TransitionBar" Grid.Column="2" VerticalAlignment="Center"
+                   ToolTip="Von Hand überblenden" AutomationProperties.Name="Überblender"/>
+       <TextBlock x:Name="TBarReadout" Grid.Column="3" Text="0 %" Style="{StaticResource Mono}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
+       <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button x:Name="CutButton" Content="CUT" Width="96" MinHeight="32" Focusable="False" FontWeight="SemiBold"
+                Click="CutClicked" ToolTip="Sofortschnitt (Eingabetaste)" AutomationProperties.Name="Cut"/>
+        <Button x:Name="AutoButton" Width="96" MinHeight="32" Margin="6,0,0,0" Padding="0" Focusable="False"
+                Click="AutoClicked" ToolTip="Automatisch überblenden (Leertaste)" AutomationProperties.Name="Auto">
+         <Grid Width="96" Height="32">
+          <Border x:Name="AutoFill" HorizontalAlignment="Left" Width="0" Background="{StaticResource ProgramDark}" CornerRadius="{StaticResource NxControlRadius}"/>
+          <TextBlock Text="AUTO" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+         </Grid>
         </Button>
-        <ToggleButton x:Name="FtbButton" Grid.Row="1" Height="32" Margin="0,6,0,0" Focusable="False" Click="FtbClicked" ToolTip="Weich nach Schwarz blenden (F)" AutomationProperties.Name="Fade to Black" Content="FTB"/>
-        <ToggleButton x:Name="BlackMuteButton" Grid.Row="1" Grid.Column="1" Height="32" Margin="6,6,0,0" Focusable="False" Click="BlackMuteClicked" ToolTip="Sofort schwarz und stumm (Strg + B)" AutomationProperties.Name="Schwarz und stumm" Content="SCHWARZ + STUMM" FontSize="10"/>
-       </Grid>
+       </StackPanel>
+       <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+        <ToggleButton x:Name="FtbButton" Content="FTB" Padding="10,3" Focusable="False" Click="FtbClicked"
+                      ToolTip="Weich nach Schwarz blenden (F)" AutomationProperties.Name="Fade to Black"/>
+        <ToggleButton x:Name="BlackMuteButton" Content="Schwarz + stumm" Padding="10,3" Margin="6,0,0,0" FontSize="11"
+                      Focusable="False" Click="BlackMuteClicked" ToolTip="Sofort schwarz und stumm (Strg + B)" AutomationProperties.Name="Schwarz und stumm"/>
+       </StackPanel>
       </Grid>
      </Border>
 
      <!-- Buses -->
-     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="12,10,12,8">
+     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="12,6,12,3">
       <Grid>
        <Grid.ColumnDefinitions><ColumnDefinition Width="112"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
        <Grid.RowDefinitions><RowDefinition Height="Auto"/></Grid.RowDefinitions>
        <StackPanel>
-        <Grid Height="46"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="9" Height="9" CornerRadius="5" Background="{StaticResource Program}" Margin="0,0,8,0"/><TextBlock Text="PROGRAMM" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/></StackPanel>
+        <Grid Height="36"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="9" Height="9" CornerRadius="5" Background="{StaticResource Program}" Margin="0,0,8,0"/><TextBlock Text="PROGRAMM" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/></StackPanel>
          <ToggleButton x:Name="ProgramLock" HorizontalAlignment="Right" Width="26" MinHeight="22" Height="22" Padding="0" Focusable="False" Content="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="11" IsChecked="True" Checked="ProgramLockChanged" Unchecked="ProgramLockChanged" ToolTip="Gesperrt: Die Programm-Tasten zeigen nur an. Entsperren erlaubt Direktwahl mit sofortigem Schnitt." AutomationProperties.Name="Programm-Tasten sperren"/></Grid>
-        <Grid Height="46" Margin="0,6,0,0"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="9" Height="9" CornerRadius="5" Background="{StaticResource Preview}" Margin="0,0,8,0"/><TextBlock Text="VORSCHAU" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/></StackPanel></Grid>
+        <Grid Height="36" Margin="0,6,0,0"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="9" Height="9" CornerRadius="5" Background="{StaticResource Preview}" Margin="0,0,8,0"/><TextBlock Text="VORSCHAU" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/></StackPanel></Grid>
        </StackPanel>
        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
         <StackPanel Margin="0,0,0,6">
@@ -131,15 +142,15 @@
        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
        <Grid Margin="0,0,6,8">
         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <TextBlock Text="MEDIENPOOL" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+        <TextBlock Text="Medienpool" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
         <TextBlock x:Name="PoolCount" Grid.Column="1" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,16,0"/>
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"><RadioButton x:Name="AllFilter" Content="Alle" GroupName="PoolFilter" Tag="all" Style="{StaticResource FilterButton}" IsChecked="True" Checked="PoolFilterChanged"/><RadioButton Content="Medien" GroupName="PoolFilter" Tag="media" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/><RadioButton Content="Testbilder" GroupName="PoolFilter" Tag="patterns" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/></StackPanel>
         <Grid Grid.Column="4" Width="190" Margin="0,0,8,0"><TextBox x:Name="PoolSearch" MinHeight="26" Padding="26,3,8,3" TextChanged="PoolSearchChanged" ToolTip="Pool durchsuchen" AutomationProperties.Name="Pool durchsuchen"/><TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/><TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=PoolSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
-        <Button x:Name="AddContentButton" Grid.Column="5" Content="+ Hinzufügen" Style="{StaticResource PrimaryButton}" MinHeight="26" Padding="12,3" Focusable="False" Click="OpenAddMenu"><Button.ContextMenu><ContextMenu><MenuItem Header="Bilder / Videos hinzufügen …" Click="AddFiles"/><MenuItem Header="Webseite hinzufügen …" Click="AddWebsite"/><MenuItem Header="Text hinzufügen …" Click="AddText"/><Separator/><MenuItem Header="Uhr hinzufügen" Click="AddClock"/></ContextMenu></Button.ContextMenu></Button>
+        <Button x:Name="AddContentButton" Grid.Column="5" Content="+ Hinzufügen" MinHeight="26" Padding="12,3" Focusable="False" Click="OpenAddMenu"><Button.ContextMenu><ContextMenu><MenuItem Header="Bilder / Videos hinzufügen …" Click="AddFiles"/><MenuItem Header="Webseite hinzufügen …" Click="AddWebsite"/><MenuItem Header="Text hinzufügen …" Click="AddText"/><Separator/><MenuItem Header="Uhr hinzufügen" Click="AddClock"/></ContextMenu></Button.ContextMenu></Button>
        </Grid>
-       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto" Focusable="False" PreviewMouseWheel="PoolMouseWheel">
         <Grid>
-         <ItemsControl x:Name="PoolItems" Focusable="False" Margin="0,0,6,0"><ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Button Style="{StaticResource PoolCard}" Click="PoolCardClicked" ToolTip="{Binding Name}"><Button.ContextMenu><ContextMenu><MenuItem Header="In Vorschau laden" Click="PoolPreviewClicked"/><MenuItem Header="Sofort auf Programm (CUT)" Click="PoolCutClicked"/><Separator/><MenuItem Header="Aus dem Pool entfernen" Click="PoolRemoveClicked"/></ContextMenu></Button.ContextMenu></Button></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+         <ItemsControl x:Name="PoolItems" Focusable="False" Margin="0,0,6,0"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Button Style="{StaticResource PoolCard}" Click="PoolCardClicked" ToolTip="{Binding Name}"><Button.ContextMenu><ContextMenu><MenuItem Header="In Vorschau laden" Click="PoolPreviewClicked"/><MenuItem Header="Sofort auf Programm (CUT)" Click="PoolCutClicked"/><Separator/><MenuItem Header="Aus dem Pool entfernen" Click="PoolRemoveClicked"/></ContextMenu></Button.ContextMenu></Button></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
          <TextBlock x:Name="EmptyPool" Text="Keine passenden Inhalte.&#x0a;Ziehe Dateien hierher oder nutze + Hinzufügen." Style="{StaticResource Hint}" Margin="6,20" Visibility="Collapsed" IsHitTestVisible="False"/>
         </Grid>
        </ScrollViewer>
@@ -148,13 +159,12 @@
     </Grid>
 
     <!-- Inspector -->
-    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+    <ScrollViewer x:Name="InspectorPanel" Grid.Column="1" Width="246" Margin="12,0,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False"
+                  Visibility="{Binding IsChecked, ElementName=InspectorToggle, Converter={StaticResource ShowWhenChecked}}">
      <StackPanel Margin="0,0,0,2">
       <Border Style="{StaticResource PanelBorder}" Padding="14,12" Margin="0,0,0,8"><StackPanel>
        <TextBlock Text="AUSGABE" Style="{StaticResource SectionTitle}"/>
-       <StackPanel Orientation="Horizontal"><Ellipse x:Name="OutputStateDot" Width="9" Height="9" Fill="{StaticResource Dim}" Margin="0,0,8,0"/><TextBlock x:Name="OutputState" Text="Ausgabe geschlossen" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/></StackPanel>
-       <TextBlock x:Name="OutputDetail" Style="{StaticResource Hint}" FontSize="11" Margin="0,4,0,10" Text="Wähle unter Setup den Beamer."/>
-       <Button x:Name="OutputToggleButton" Content="Ausgabe starten" Style="{StaticResource PrimaryButton}" Focusable="False" Click="ToggleOutput"/>
+       <TextBlock x:Name="OutputDetail" Style="{StaticResource Hint}" FontSize="11" Margin="0" Text="Wähle unter Setup den Beamer."/>
       </StackPanel></Border>
       <Border Style="{StaticResource PanelBorder}" Padding="14,12" Margin="0,0,0,8"><StackPanel>
        <TextBlock Text="AUDIO" Style="{StaticResource SectionTitle}"/>
@@ -173,23 +183,18 @@
        <TextBlock x:Name="InfoDetail" Style="{StaticResource Hint}" FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
        <Button x:Name="ReloadButton" Content="Webseite neu laden" Margin="0,10,0,0" Focusable="False" Click="ReloadClicked" Visibility="Collapsed"/>
       </StackPanel></Border>
-      <Border Style="{StaticResource PanelBorder}" Padding="14,12"><StackPanel>
-       <TextBlock Text="UHRZEIT" Style="{StaticResource SectionTitle}"/>
-       <TextBlock x:Name="InspectorClock" Text="00:00:00" FontFamily="Consolas" FontSize="26"/>
-       <TextBlock x:Name="ControlDate" Style="{StaticResource Hint}" FontSize="11" Margin="0,2,0,0"/>
-      </StackPanel></Border>
-     </StackPanel>
+</StackPanel>
     </ScrollViewer>
    </Grid>
 
    <!-- ============ CUE MODE ============ -->
-   <local:CueModeView x:Name="CueModePage" Visibility="Collapsed" Margin="10,10,10,6"/>
+   <local:CueModeView x:Name="CueModePage" Visibility="Collapsed" Margin="12,12,12,8"/>
 
    <!-- ============ SETUP ============ -->
-   <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,6">
+   <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="12,12,12,8">
     <StackPanel MaxWidth="1000" HorizontalAlignment="Left" Margin="0,0,12,4">
      <Border Style="{StaticResource PanelBorder}" Padding="22" Margin="0,0,0,12"><StackPanel>
-      <TextBlock Text="BILDAUSGABE" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/><TextBlock Text="Leinwand und Ausgabeschutz" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,18"/>
+      <TextBlock Text="Leinwand und Ausgabeschutz" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Ausgabe-Bildschirm" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/><ComboBox x:Name="DisplayPicker" Grid.Column="1" MinWidth="300"/><Button Grid.Column="2" Content="Neu erkennen" Click="RefreshDisplays" Margin="10,0,0,0"/></Grid>
       <StackPanel Margin="180,12,0,0">
        <CheckBox x:Name="Protection" Content="Maus und andere Fenster von der Leinwand fernhalten" IsChecked="True" Checked="ProtectionChanged" Unchecked="ProtectionChanged"/>
@@ -199,16 +204,16 @@
       </StackPanel>
      </StackPanel></Border>
      <Border Style="{StaticResource PanelBorder}" Padding="22" Margin="0,0,0,12"><StackPanel>
-      <TextBlock Text="TON" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/><TextBlock Text="Gemeinsames Audiogerät" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,18"/>
+      <TextBlock Text="Audiogerät" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Audiogerät" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/><ComboBox x:Name="AudioPicker" Grid.Column="1" MinWidth="300"/><Button Grid.Column="2" Content="Ton anwenden" Click="ApplyAudio" Margin="10,0,0,0"/></Grid>
       <StackPanel Margin="180,10,0,0"><TextBlock Text="Ändert das Windows-Standardgerät für Videos, Webseiten und andere Programme. Beim Beenden wird die vorherige Auswahl wiederhergestellt." Style="{StaticResource Hint}"/><Button Content="Audiogeräte neu erkennen" Click="RefreshAudio" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Padding="0,8" Margin="0,2,0,0"/></StackPanel>
      </StackPanel></Border>
      <Border Style="{StaticResource PanelBorder}" Padding="22" Margin="0,0,0,12"><StackPanel>
-      <TextBlock Text="ÜBERGÄNGE" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/><TextBlock Text="Schwarzblende" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,18"/>
+      <TextBlock Text="Schwarzblende" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Dauer von FTB" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/><ComboBox x:Name="FtbPicker" Grid.Column="1" Width="120" SelectionChanged="FtbDurationChanged"><ComboBoxItem Content="Sofort" Tag="0"/><ComboBoxItem Content="0,5 s" Tag="500"/><ComboBoxItem Content="1 s" Tag="1000"/><ComboBoxItem Content="2 s" Tag="2000"/><ComboBoxItem Content="3 s" Tag="3000"/></ComboBox></Grid>
      </StackPanel></Border>
      <Border Style="{StaticResource PanelBorder}" Padding="22" Margin="0,0,0,12"><StackPanel>
-      <TextBlock Text="UPDATES" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/><TextBlock Text="Programmversion" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,18"/>
+      <TextBlock Text="Updates" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="Installierte Version" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/><TextBlock x:Name="UpdateVersionText" Grid.Column="1" FontFamily="Consolas" FontSize="14" VerticalAlignment="Center"/></Grid>
       <StackPanel Margin="180,12,0,0">
        <TextBlock x:Name="UpdateStatusText" Text="Noch nicht nach Updates gesucht." Style="{StaticResource Hint}"/>
@@ -224,7 +229,7 @@
       </StackPanel>
      </StackPanel></Border>
      <Border Style="{StaticResource PanelBorder}" Padding="22"><StackPanel>
-      <TextBlock Text="SHOW UND PROGRAMM" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/><TextBlock Text="Sitzung und Dateien" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,14"/>
+      <TextBlock Text="Sitzung und Dateien" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,12"/>
       <TextBlock Text="Einstellungen und Medienpool werden automatisch gespeichert. Eine Showdatei sichert Pool und Cue-Ablauf zusätzlich separat." Style="{StaticResource Hint}" Margin="0,0,0,14"/>
       <WrapPanel><Button Content="Show öffnen …" Click="OpenShow" Margin="0,0,8,8"/><Button Content="Show speichern …" Click="SaveShow" Margin="0,0,8,8"/><Button Content="Hilfe und Tastenkürzel" Click="ShowHelp" Margin="0,0,8,8"/><Button Content="Programm beenden" Click="ExitProgram" Style="{StaticResource DangerButton}" Margin="0,0,0,8"/></WrapPanel>
      </StackPanel></Border>
@@ -232,7 +237,7 @@
    </ScrollViewer>
 
    <!-- ============ HELP ============ -->
-   <ScrollViewer x:Name="HelpPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="10,10,10,6">
+   <ScrollViewer x:Name="HelpPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="12,12,12,8">
     <StackPanel MaxWidth="980" HorizontalAlignment="Left" Margin="0,0,12,4">
      <Border Style="{StaticResource PanelBorder}" Padding="24" Margin="0,0,0,12"><StackPanel>
       <TextBlock Text="SO ARBEITET DER MISCHER" Style="{StaticResource Eyebrow}" Foreground="{StaticResource Accent}"/>
