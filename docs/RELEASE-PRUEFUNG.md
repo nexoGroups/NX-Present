@@ -1,5 +1,11 @@
 # Releaseprüfung
 
+## 0.5.1
+
+- Release-Build ohne Warnungen oder Fehler. Alle 373 Prüfungen der Standardsuite bestanden.
+- Die Quellenzeilen wurden bei 1180 × 740 geprüft. Der Abstand zwischen Programm-Label und Schloss beträgt 8 DIPs. Zwischen Schloss und erster Quellentaste liegen 12 DIPs. Die erste Vorschautaste steht bündig darunter, mit 8 DIPs zwischen den Zeilen.
+- Der erweiterte Videotest zum erneuten Vorladen eines laufenden Clips bleibt offen. Der Fehler ließ sich für 0.5.0 auch im unveränderten Ausgangsstand nachstellen.
+
 ## 0.5.0
 
 - Release-Build ohne Warnungen oder Fehler. Alle 371 Prüfungen der Standardsuite bestanden.

@@ -21,7 +21,7 @@ Vorschau wählen, Programm sehen, mit AUTO überblenden.
 
 NX-Present ist ein Show-Control-Programm für Windows, aufgebaut wie ein Videomischer. Der **Programm-Monitor** zeigt in Echtzeit genau das Bild, das auf der Leinwand steht, auch bei Videos und Webseiten. Im **Vorschau-Monitor** bereitest du die nächste Quelle vor. **CUT** schaltet sie sofort auf Programm, **AUTO** blendet automatisch über, und mit dem **Überblender** mischst du von Hand.
 
-> **Stand dieser Beschreibung:** NX-Present **0.5.0** verwendet das dunkle NX-UI-System im Bildmischer, im Cue Mode und im Setup. Der aktuelle Entwicklungsstand lässt sich [selbst bauen](#selbst-bauen).
+> **Stand dieser Beschreibung:** NX-Present **0.5.1** verwendet das dunkle NX-UI-System im Bildmischer, im Cue Mode und im Setup. Der aktuelle Entwicklungsstand lässt sich [selbst bauen](#selbst-bauen).
 
 ## Wofür ist NX-Present gedacht?
 

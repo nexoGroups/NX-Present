@@ -376,6 +376,16 @@ static class PresentationChecks
             check(bar2.ActualWidth >= 150 && cut.ActualWidth > 90 && auto.ActualWidth > 90, $"At the minimum size the T-bar keeps room ({bar2.ActualWidth:0} px) and CUT / AUTO stay whole");
             var smallProgram = ((MonitorView)window.FindName("ProgramMonitor")).Picture;
             check(smallProgram.ActualWidth >= 250 && smallProgram.ActualHeight >= 140, $"At the minimum size the monitors are still usable ({smallProgram.ActualWidth:0} x {smallProgram.ActualHeight:0})");
+            var programLabel = (TextBlock)window.FindName("ProgramBusLabel");
+            var previewLabel = (TextBlock)window.FindName("PreviewBusLabel");
+            double labelToLock = padlock.TranslatePoint(new Point(), programLabel).X - programLabel.ActualWidth;
+            double lockToKey = programKeys[0].TranslatePoint(new Point(), padlock).X - padlock.ActualWidth;
+            check(labelToLock >= 7.5 && lockToKey >= 11.5,
+                $"The program label, lock and first source have separate space ({labelToLock:0.0} and {lockToKey:0.0} DIPs)");
+            double previewLabelToKey = previewKeys[0].TranslatePoint(new Point(), previewLabel).X - previewLabel.ActualWidth;
+            var previewKeyOrigin = previewKeys[0].TranslatePoint(new Point(), programKeys[0]);
+            check(previewLabelToKey >= 11.5 && Math.Abs(previewKeyOrigin.X) < 0.5 && previewKeyOrigin.Y - programKeys[0].ActualHeight >= 7.5,
+                "The preview keys align with the program keys and have a visible gap between rows");
             SavePng(Capture(window, 1180, 740), Path.Combine(folder, "mixer-ui-small.png"));
             var mixerOptions = (ScrollViewer)window.FindName("InspectorPanel");
             var options = (ToggleButton)window.FindName("InspectorToggle");

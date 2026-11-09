@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.5.1 – Mehr Platz in den Quellenzeilen
+
+- In den Programm- und Vorschauzeilen haben Beschriftungen, Schloss und Quellentasten mehr Abstand. Die ersten Quellentasten stehen bündig untereinander.
+- Das Setup enthält auch den kompakten Mischer und das NX-UI-System aus 0.5.0.
+
 ## 0.5.0 – NX-UI-System
 
 - Bildmischer, Cue Mode und Setup verwenden das dunkle NX-UI-System mit Inter, blauen Bedienelementen und einheitlichen Karten, Menüs und Eingabefeldern.
