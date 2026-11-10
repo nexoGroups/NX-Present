@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.5.2 – Video-Vorschau und NX-UI-System
+
+- Videos in der Vorschau werden erst als bereit angezeigt, wenn sie auf ihrem ersten Bild angehalten sind. Beim erneuten Vorladen startet der Decoder wieder am Anfang.
+- Diese Version enthält den kompakten Mischer, das dunkle NX-UI-System und die überarbeiteten Abstände aus 0.5.0 und 0.5.1.
+- Wer noch 0.3.1 nutzt, installiert das neue Windows-Setup einmal von Hand. Danach kann NX-Present Updates über Velopack beziehen.
+
 ## 0.5.1 – Mehr Platz in den Quellenzeilen
 
 - In den Programm- und Vorschauzeilen haben Beschriftungen, Schloss und Quellentasten mehr Abstand. Die ersten Quellentasten stehen bündig untereinander.

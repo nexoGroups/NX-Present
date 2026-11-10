@@ -4,6 +4,7 @@
 
 - Release-Build ohne Warnungen oder Fehler. Alle 373 Prüfungen der Standardsuite bestanden.
 - Die Quellenzeilen wurden bei 1180 × 740 geprüft. Der Abstand zwischen Programm-Label und Schloss beträgt 8 DIPs. Zwischen Schloss und erster Quellentaste liegen 12 DIPs. Die erste Vorschautaste steht bündig darunter, mit 8 DIPs zwischen den Zeilen.
+- Das Setup erbte im Projektordner die niedrige Windows-Integritätsstufe und meldete „Zugriff verweigert (os error 5)“. Eine Kopie mit identischer SHA-256-Prüfsumme installierte 0.5.1 aus dem Windows-Temp-Ordner in ein separates Testziel. Der Installations-Hook und die anschließende Deinstallation waren erfolgreich.
 - Außerhalb der Sandbox bestanden die WebView2-Tests. Die erweiterte Mediensuite bricht bei der Prüfung ab, ob ein für die Vorschau gewählter Clip auf seinem ersten Bild wartet. Bei 0.5.0 scheiterte auch das erneute Vorladen eines laufenden Clips im unveränderten Ausgangsstand.
 
 ## 0.5.0

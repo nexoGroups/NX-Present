@@ -17,9 +17,11 @@ public partial class App : System.Windows.Application
     private Mutex? instance;
     public static LibVLC MediaEngine { get; private set; } = null!;
     public static string DataDirectory { get; internal set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NX-Present");
+    internal bool StartMainWindow { get; init; } = true;
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (!StartMainWindow) return;
         instance = new Mutex(true, InstanceName, out bool created);
         if (!created) { MessageBox.Show("NX-Present läuft bereits.", "NX-Present"); Shutdown(); return; }
         Directory.CreateDirectory(DataDirectory);

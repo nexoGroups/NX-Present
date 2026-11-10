@@ -12,8 +12,10 @@ static class PresentationChecks
 {
     public static void Run(Action<bool, string> check, string folder, string[] args)
     {
-        var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        // Load the real styles without starting the production window or claiming its mutex.
+        var app = new App { StartMainWindow = false };
         app.InitializeComponent();
+        app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         var previous = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext());
         try

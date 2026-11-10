@@ -41,8 +41,8 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     private long frames, copied, time, length;
     private int copyBudget;
     private int requestedVolume = -1, appliedVolume = -1;
-    private bool started;
-    private TaskCompletionSource<bool> firstFrame = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private volatile bool started;
+    private readonly TaskCompletionSource<bool> firstFramePaused = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public VideoFeed(Cue cue, LibVLC? engine) : base(cue)
     {
@@ -120,26 +120,30 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         player.EndReached += (_, _) =>
         {
             ended = true; playing = false; AllowCopy();
-            if (Loop && !released) Enqueue(Replay);
+            if (Loop && !released) Enqueue(() => Replay());
         };
         player.EncounteredError += (_, _) =>
         {
             if (released) return;
-            firstFrame.TrySetException(new InvalidOperationException("Video konnte nicht wiedergegeben werden."));
+            firstFramePaused.TrySetException(new InvalidOperationException("Video konnte nicht wiedergegeben werden."));
             dispatcher.BeginInvoke(() => { if (State == FeedState.Ready) Fail("Video konnte nicht wiedergegeben werden."); });
         };
         player.Playing += (_, _) => { playing = true; ended = false; };
-        player.Paused += (_, _) => { playing = false; AllowCopy(); };
+        player.Paused += (_, _) =>
+        {
+            playing = false;
+            AllowCopy();
+            if (readySlot >= 0) firstFramePaused.TrySetResult(true);
+        };
         player.Stopped += (_, _) => { playing = false; AllowCopy(); };
         player.TimeChanged += (_, e) => Interlocked.Exchange(ref time, e.Time);
         player.LengthChanged += (_, e) => Interlocked.Exchange(ref length, e.Length);
         player.SeekableChanged += (_, e) => seekable = e.Seekable != 0;
 
         // Play until the first frame is on screen, then wait there: the viewer shows the cued first picture.
-        firstFrame = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         pauseOnFirstFrame = true;
         if (!await Task.Run(() => player.Play(), cancellation)) throw new InvalidOperationException("Video konnte nicht gestartet werden.");
-        await firstFrame.Task.WaitAsync(TimeSpan.FromSeconds(12), cancellation);
+        await firstFramePaused.Task.WaitAsync(TimeSpan.FromSeconds(12), cancellation);
         if (IsDisposed) return;
         CopyFrame();
         Enqueue(ApplyVolume);
@@ -176,8 +180,11 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         readySlot = (int)picture - 1;
         Interlocked.Increment(ref frames);
         // A source that is only being cued stops on its first picture. Only the queue talks to the player.
-        if (pauseOnFirstFrame) { pauseOnFirstFrame = false; Enqueue(() => player?.SetPause(true)); }
-        firstFrame.TrySetResult(true);
+        if (pauseOnFirstFrame)
+        {
+            pauseOnFirstFrame = false;
+            Enqueue(() => { if (!started) player?.SetPause(true); });
+        }
         // VLC redraws a paused picture again and again: copy it only a few times after something can have changed.
         if (!playing)
         {
@@ -196,13 +203,13 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         frame.WritePixels(new Int32Rect(0, 0, width, height), ring[slot], pitch * lines, pitch);
         Interlocked.Increment(ref copied);
     }
-    // After the end the player has to be stopped before it will play from the beginning again.
-    private void Replay()
+    private void Replay(bool cueFirstFrame = false)
     {
         if (player == null || released) return;
+        player.Stop();
         ended = false;
         AllowCopy(12);
-        player.Stop();
+        pauseOnFirstFrame = cueFirstFrame;
         player.Play();
     }
     private void AllowCopy(int pictures = 3) => Volatile.Write(ref copyBudget, pictures);
@@ -233,15 +240,8 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         Enqueue(() =>
         {
             if (player == null || released) return;
-            // Run to the first picture again and stop there; the display callback pauses on arrival.
-            pauseOnFirstFrame = true;
-            AllowCopy(12);
-            if (ended || player.State is VLCState.Ended or VLCState.Stopped) Replay();
-            else
-            {
-                if (player.IsSeekable) player.Time = 0;
-                player.SetPause(false);
-            }
+            // Stop the decoder before arming the callback so an old frame cannot consume the pause.
+            Replay(cueFirstFrame: true);
             Interlocked.Exchange(ref time, 0);
         });
     }
@@ -322,7 +322,7 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
             }, TaskScheduler.Default);
         }
         lock (Disposals) { Disposals.RemoveAll(x => x.IsCompleted); Disposals.Add(disposal); }
-        firstFrame.TrySetCanceled();
+        firstFramePaused.TrySetCanceled();
     }
 
     /// <summary>Waits until released players are really gone, so the video engine can shut down without live players.</summary>
