@@ -280,7 +280,7 @@ static class PresentationChecks
             Cue.FromFile(image), new(CueKind.Text, "Willkommen", "Willkommen zur Veranstaltung"), new(CueKind.Clock, "Uhr", "local"),
             new(CueKind.Video, "Fehlendes Video.mp4", Path.Combine(folder, "gibt-es-nicht.mp4")), new(CueKind.Website, "example.org", "https://example.org/")
         };
-        var settings = new AppSettings { OutputDevice = @"\\.\DISPLAY99", Cues = pool, Transition = TransitionKind.Dissolve, TransitionMilliseconds = 1000, Volume = 60, AnimatePatterns = false };
+        var settings = new AppSettings { OutputDevice = @"\\.\DISPLAY99", Cues = pool, AuxSources = [.. pool.Take(8), Cue.Black, pool[0]], Transition = TransitionKind.Dissolve, TransitionMilliseconds = 1000, Volume = 60, AnimatePatterns = false };
         var window = new MainWindow(null, settings, Path.Combine(folder, "window-settings.json"))
         {
             WindowStartupLocation = WindowStartupLocation.Manual, Left = -20000, Top = -20000, Width = 1600, Height = 960, ShowActivated = false
@@ -294,41 +294,43 @@ static class PresentationChecks
             check(mixer.Volume == 60 && mixer.DurationMilliseconds == 1000 && mixer.Style == TransitionKind.Dissolve && !mixer.AnimatePatterns, "Saved settings reach the switcher");
             var cards = Descendants(window).OfType<Button>().Where(b => b.DataContext is BusKey && b.Style == (Style)window.FindResource("PoolCard")).ToList();
             check(cards.Count == pool.Count, $"The media pool shows one card per source ({cards.Count})");
-            var programKeys = Descendants((DependencyObject)window.FindName("ProgramBus")).OfType<Button>().Where(b => b.DataContext is BusKey).ToList();
-            var previewKeys = Descendants((DependencyObject)window.FindName("PreviewBus")).OfType<Button>().Where(b => b.DataContext is BusKey).ToList();
-            check(programKeys.Count == pool.Count + 1 && previewKeys.Count == pool.Count + 1, "Both buses offer black and every source");
+            var tiles = Descendants((DependencyObject)window.FindName("AuxTiles")).OfType<Button>().Where(b => b.DataContext is AuxChannel).ToList();
+            check(tiles.Count == 10 && ((AuxChannel)tiles[9].DataContext).Name == "AUX 10", "The mixer shows ten numbered AUX tiles");
+            check(tiles.All(tile => ((AuxChannel)tile.DataContext).Source.HasThumbnail), "Every assigned test, still and black input has a thumbnail");
             var cut = (Button)window.FindName("CutButton");
             var auto = (Button)window.FindName("AutoButton");
-            check(!cut.IsEnabled && !auto.IsEnabled, "CUT and AUTO are off while nothing is in the preview");
+            var me1 = (MonitorView)window.FindName("Me1Monitor");
+            var me2 = (MonitorView)window.FindName("Me2Monitor");
+            check(me1.Heading == "ME1" && me2.Heading == "ME2" && mixer.LiveMe == 1 && !cut.IsEnabled && !auto.IsEnabled, "ME1 starts on black while ME2 is empty");
 
-            // Preview a source, then take it.
-            ((Button)previewKeys[1]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            tiles[0].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(100);
-            check(mixer.Preview?.Cue == pool[0] && cut.IsEnabled && auto.IsEnabled, "A click on a preview key loads the source and arms CUT and AUTO");
-            check(((BusKey)previewKeys[1].DataContext).IsPreview && !((BusKey)programKeys[1].DataContext).IsProgram, "The preview key lights green, not red");
+            check(mixer.Preview?.Cue == pool[0] && me2.Picture.CurrentFeed?.Cue == pool[0] && cut.IsEnabled && auto.IsEnabled, "An AUX click arms the source on the inactive ME");
             cut.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(100);
-            check(mixer.Program.Cue == pool[0] && ((BusKey)programKeys[1].DataContext).IsProgram, "CUT puts the source on air and lights its program key");
+            check(mixer.LiveMe == 2 && me2.Picture.IsOnAir && me2.Picture.CurrentFeed?.Cue == pool[0] && me1.Picture.CurrentFeed?.Cue == Cue.Black, "CUT changes the live ME without moving either picture");
 
-            // The program monitor shows what is on air.
-            var programMonitor = (MonitorView)window.FindName("ProgramMonitor");
-            var pm = Capture(programMonitor.Picture, (int)programMonitor.Picture.ActualWidth, (int)programMonitor.Picture.ActualHeight);
+            var pm = Capture(me2.Picture, (int)me2.Picture.ActualWidth, (int)me2.Picture.ActualHeight);
             var px = new byte[4]; pm.CopyPixels(new Int32Rect(4, 4, 1, 1), px, 4, 0);
-            check(programMonitor.Picture.ActualWidth > 200 && px[0] > 240 && px[1] > 240 && px[2] > 240, "The program monitor shows the colour bars (white first bar)");
+            check(me2.Picture.ActualWidth > 200 && px[0] > 240 && px[1] > 240 && px[2] > 240, "ME2 shows the colour bars (white first bar)");
 
-            // Locked program bus ignores clicks; unlocking allows a hot cut.
-            ((Button)programKeys[4]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await Task.Delay(100);
-            check(mixer.Program.Cue == pool[0], "A locked program bus ignores clicks");
-            var padlock = (ToggleButton)window.FindName("ProgramLock");
-            padlock.IsChecked = false;
-            ((Button)programKeys[4]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await Task.Delay(200);
-            check(mixer.Program.Cue == pool[3], "An unlocked program bus cuts to the clicked source");
-            padlock.IsChecked = true;
+            ((RadioButton)window.FindName("AuxNav")).IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+            var patchers = Descendants((DependencyObject)window.FindName("AuxRoutes")).OfType<ComboBox>().Where(box => box.DataContext is AuxChannel).ToList();
+            check(patchers.Count == 10 && patchers[0].SelectedItem is BusKey { Cue: var firstCue } && firstCue == pool[0], "The patcher shows all ten saved routes");
+            check(((AuxChannel)patchers[0].DataContext).Choices.Any(key => key.Cue == Cue.Black), "The patcher offers the permanent black source");
+            patchers[0].SelectedItem = patchers[0].Items.OfType<BusKey>().First(key => key.Cue == pool[3]);
+            check(((AuxChannel)tiles[0].DataContext).Source.Cue == pool[3] && mixer.Program.Cue == pool[0], "Repatching updates the tile and does not change projection");
+            SavePng(Capture(window, 1600, 960), Path.Combine(folder, "aux-ui.png"));
+            ((RadioButton)window.FindName("MixerNav")).IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            tiles[0].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            check(me1.Picture.CurrentFeed?.Cue == pool[3] && me2.Picture.CurrentFeed?.Cue == pool[0], "The next AUX click loads its newly patched source into ME1");
+            mixer.SetManual(1);
+            check(mixer.LiveMe == 1 && me1.Picture.CurrentFeed?.Cue == pool[3] && me2.Picture.CurrentFeed?.Cue == pool[0], "Completing the T-bar takes ME1 with both pictures in place");
 
             // AUTO with a visible transition.
-            ((Button)previewKeys[6]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            tiles[5].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(200);
             SavePng(Capture(window, 1600, 960), Path.Combine(folder, "mixer-ui.png"));
             auto.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -339,13 +341,13 @@ static class PresentationChecks
             check(bar.Value > .1 && bar.Value < .9 && !bar.IsEnabled, "The T-bar follows the automatic transition");
             SavePng(Capture(window, 1600, 960), Path.Combine(folder, "mixer-ui-transition.png"));
             await Task.Delay(1100);
-            check(!mixer.IsTransitioning && mixer.Program.Cue == pool[5] && bar.Value == 0 && cut.IsEnabled, "The transition completes by itself and the controls return to rest");
+            check(!mixer.IsTransitioning && mixer.Program.Cue == pool[5] && mixer.LiveMe == 2 && bar.Value == 0 && cut.IsEnabled, "The transition completes by itself and the controls return to rest");
 
             // A picture for the documentation: patterns only, so that no file path is shown.
-            ((Button)previewKeys[1]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            tiles[9].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(150);
             cut.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            ((Button)previewKeys[2]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            tiles[1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Task.Delay(150);
             mixer.Style = TransitionKind.Dissolve; mixer.DurationMilliseconds = 5000;
             auto.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -376,18 +378,13 @@ static class PresentationChecks
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
             var bar2 = (TBar)window.FindName("TransitionBar");
             check(bar2.ActualWidth >= 150 && cut.ActualWidth > 90 && auto.ActualWidth > 90, $"At the minimum size the T-bar keeps room ({bar2.ActualWidth:0} px) and CUT / AUTO stay whole");
-            var smallProgram = ((MonitorView)window.FindName("ProgramMonitor")).Picture;
-            check(smallProgram.ActualWidth >= 250 && smallProgram.ActualHeight >= 140, $"At the minimum size the monitors are still usable ({smallProgram.ActualWidth:0} x {smallProgram.ActualHeight:0})");
-            var programLabel = (TextBlock)window.FindName("ProgramBusLabel");
-            var previewLabel = (TextBlock)window.FindName("PreviewBusLabel");
-            double labelToLock = padlock.TranslatePoint(new Point(), programLabel).X - programLabel.ActualWidth;
-            double lockToKey = programKeys[0].TranslatePoint(new Point(), padlock).X - padlock.ActualWidth;
-            check(labelToLock >= 7.5 && lockToKey >= 11.5,
-                $"The program label, lock and first source have separate space ({labelToLock:0.0} and {lockToKey:0.0} DIPs)");
-            double previewLabelToKey = previewKeys[0].TranslatePoint(new Point(), previewLabel).X - previewLabel.ActualWidth;
-            var previewKeyOrigin = previewKeys[0].TranslatePoint(new Point(), programKeys[0]);
-            check(previewLabelToKey >= 11.5 && Math.Abs(previewKeyOrigin.X) < 0.5 && previewKeyOrigin.Y - programKeys[0].ActualHeight >= 7.5,
-                "The preview keys align with the program keys and have a visible gap between rows");
+            check(me1.Picture.ActualWidth >= 250 && me1.Picture.ActualHeight >= 140, $"At the minimum size the ME monitors are still usable ({me1.Picture.ActualWidth:0} x {me1.Picture.ActualHeight:0})");
+            var tileRow = (FrameworkElement)window.FindName("AuxTiles");
+            var poolItems = (FrameworkElement)window.FindName("PoolItems");
+            check(tiles.All(tile => tile.IsVisible && tile.ActualWidth >= 60)
+                && tiles.Zip(tiles.Skip(1)).All(pair => pair.Second.TranslatePoint(new Point(), pair.First).X >= pair.First.ActualWidth + 4)
+                && tileRow.TranslatePoint(new Point(0, tileRow.ActualHeight), poolItems).Y < 0,
+                "At minimum size all ten AUX tiles fit side by side above the media pool");
             SavePng(Capture(window, 1180, 740), Path.Combine(folder, "mixer-ui-small.png"));
             var mixerOptions = (ScrollViewer)window.FindName("InspectorPanel");
             var options = (ToggleButton)window.FindName("InspectorToggle");
@@ -395,8 +392,11 @@ static class PresentationChecks
             options.IsChecked = true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             window.UpdateLayout();
-            check(mixerOptions.IsVisible && bar2.ActualWidth >= 150 && smallProgram.ActualWidth >= 250,
+            check(mixerOptions.IsVisible && bar2.ActualWidth >= 150 && me1.Picture.ActualWidth >= 250,
                 "The options panel opens without obscuring the monitors or transition controls");
+            check(tiles.All(tile => tile.ActualWidth >= 60) &&
+                tiles[^1].TranslatePoint(new Point(tiles[^1].ActualWidth, 0), mixerOptions).X < 0,
+                "At minimum size the options panel stays clear of all ten AUX tiles");
             options.IsChecked = false;
 
             // The cue page at the smallest size, with a rundown that uses every kind of cue.
@@ -445,7 +445,7 @@ static class PresentationChecks
         }
         finally { window.Close(); }
         var saved = SettingsStore.Load(Path.Combine(folder, "window-settings.json"));
-        check(saved.Volume == 40 && saved.Transition == TransitionKind.WipeHorizontal && saved.TransitionMilliseconds == 250 && saved.Cues!.Count == pool.Count, "Closing the window saves the mixer settings");
+        check(saved.Volume == 40 && saved.Transition == TransitionKind.WipeHorizontal && saved.TransitionMilliseconds == 250 && saved.Cues!.Count == pool.Count && saved.AuxSources?[0] == pool[3], "Closing the window saves the mixer settings and patched AUX routes");
     }
 
     static IEnumerable<DependencyObject> Descendants(DependencyObject parent)

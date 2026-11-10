@@ -41,27 +41,28 @@ public partial class MonitorView : UserControl
 
     private void ApplyMode()
     {
-        bool program = Mode == SurfaceMode.Program;
+        bool program = Surface.IsOnAir;
         var brush = (Brush)FindResource(program ? "Program" : "Preview");
         Lamp.Background = brush;
         Tally.BorderBrush = brush;
         if (string.IsNullOrEmpty(Title.Text)) Title.Text = program ? "PROGRAMM" : "VORSCHAU";
     }
 
-    private SourceFeed? CurrentFeed() => switcher == null ? null : Mode == SurfaceMode.Program ? switcher.Program : switcher.Preview;
+    private SourceFeed? CurrentFeed() => Surface.CurrentFeed;
     private void OnChanged(SwitcherChange change)
     {
         if ((change & (SwitcherChange.Feeds | SwitcherChange.Transition)) != 0) Refresh();
-        else if ((change & SwitcherChange.Position) != 0 && Mode == SurfaceMode.Program) RefreshBadge();
+        else if ((change & (SwitcherChange.Position | SwitcherChange.Black)) != 0 && Surface.IsOnAir) RefreshBadge();
     }
 
     private void Refresh()
     {
         if (switcher == null) return;
         var feed = CurrentFeed();
-        bool program = Mode == SurfaceMode.Program;
+        bool program = Surface.IsOnAir;
+        ApplyMode();
         var cue = feed?.Cue ?? (program ? null : switcher.PreviewCue);
-        NameText.Text = cue == null ? "Keine Vorschau gewählt" : cue == Cue.Black ? "Schwarz" : cue.Name;
+        NameText.Text = cue == null ? "Keine Quelle gewählt" : cue == Cue.Black ? "Schwarz" : cue.Name;
         string detail = cue == null ? "" : cue == Cue.Black ? "EINGANG" : cue.Kind is CueKind.Image or CueKind.Video ? cue.Category + " · " + cue.Detail : cue.Kind == CueKind.Website ? "WEBSEITE · " + cue.Source : cue.Category;
         if (!program && switcher.PreviewLoading) detail = "WIRD GELADEN …";
         DetailText.Text = detail;
@@ -74,15 +75,18 @@ public partial class MonitorView : UserControl
     {
         if (switcher == null) return;
         var feed = CurrentFeed();
-        bool program = Mode == SurfaceMode.Program;
+        bool program = Surface.IsOnAir;
+        bool fixedMe = Mode is SurfaceMode.Me1 or SurfaceMode.Me2;
         if (program)
         {
-            Badge.Text = switcher.IsTransitioning ? $"ÜBERGANG {(int)Math.Round(switcher.Position * 100)} %" : outputActive ? "● LIVE" : "AUSGABE AUS";
-            Badge.Foreground = (Brush)FindResource(switcher.IsTransitioning ? "Accent" : outputActive ? "Program" : "Muted");
+            Badge.Text = fixedMe && switcher.BlackLevel >= 1 ? "PROJEKTION SCHWARZ"
+                : switcher.IsTransitioning ? $"ÜBERGANG {(int)Math.Round(switcher.Position * 100)} %"
+                : outputActive ? "● LIVE" : fixedMe ? "GEWÄHLT · AUSGABE AUS" : "AUSGABE AUS";
+            Badge.Foreground = (Brush)FindResource(switcher.IsTransitioning ? "Accent" : outputActive || fixedMe ? "Program" : "Muted");
         }
         else
         {
-            Badge.Text = switcher.PreviewLoading ? "LÄDT …" : feed == null ? "LEER" : feed.State == FeedState.Failed ? "FEHLER" : feed.State == FeedState.Ready ? "BEREIT" : "";
+            Badge.Text = switcher.PreviewLoading ? "LÄDT …" : feed == null ? (switcher.PreviewCue == null ? "LEER" : "FEHLER") : feed.State == FeedState.Failed ? "FEHLER" : feed.State == FeedState.Ready ? (fixedMe && switcher.IsTransitioning ? "ÜBERNAHME" : "BEREIT") : "";
             Badge.Foreground = (Brush)FindResource(feed?.State == FeedState.Failed ? "Danger" : feed?.State == FeedState.Ready ? "Preview" : "Muted");
         }
     }

@@ -45,7 +45,7 @@ Die Standardvalidierung braucht weder Video-Engine noch Browser und umfasst:
 - den Compositor pixelgenau für jede Übergangsart (Mix, Dip, beide Wischer, Iris, Schieben) und für Schwarz
 - Standbilder mit EXIF-Ausrichtung und Größenbegrenzung
 - den Update-Dienst ohne Netzwerk und ohne Installation: Versionsnummern, Adressen, das Verhalten einer nicht installierten Kopie (kein Angebot, kein Download, kein Start des Updaters), Einstellungen. Velopacks Prüfung von Paketen und der eigentliche Update-Weg lassen sich nur in einer installierten Kopie ausprobieren (siehe „Veröffentlichen“)
-- das Hauptfenster in einem unsichtbaren Fenster außerhalb aller Monitore: Medienpool, Tasten-Reihen, CUT und AUTO in Echtzeit, T-Bar, gesperrte Programm-Zeile, FTB, Mindestgröße, Speichern der Einstellungen. Dabei entstehen Screenshots der Oberfläche im Ordner `runs/` neben dem Testprogramm.
+- das Hauptfenster in einem unsichtbaren Fenster außerhalb aller Monitore: Medienpool, AUX-Patcher, feste ME-Monitore, CUT und AUTO in Echtzeit, T-Bar, FTB, Mindestgröße und gespeicherte AUX-Belegung. Dabei entstehen Screenshots der Oberfläche im Ordner `runs/` neben dem Testprogramm.
 
 Mit `--media` (oder `Build.ps1 -Media`) kommen die Prüfungen mit der echten Video-Engine und der WebView2-Laufzeit hinzu: ein selbst erzeugtes Testvideo (Bildfarben, Cue, Wiedergabe, Pause, Suchen, Schleife, erneutes Bereitstellen, Freigabe, defekte Datei), eine lokale animierte Webseite (Bilder, Bewegung, Freigabe des Browserfensters, nicht erreichbare Adresse) und ein Mischer mit echten Quellen. `--video <Dateipfad>` ergänzt einen Test mit einer eigenen Videodatei. `--media-only` führt nur die Mischer- und Medienprüfungen aus.
 

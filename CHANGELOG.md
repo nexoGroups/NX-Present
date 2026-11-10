@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.6.0 – ME1, ME2 und AUX-Patcher
+
+- ME1 und ME2 stehen fest im Mischer. CUT, AUTO und der Überblender wechseln die Projektion zum jeweils anderen ME.
+- Zehn AUX-Kacheln zeigen Standbilder. Ein Klick lädt die zugewiesene Quelle ins inaktive ME. Die Tasten 1 bis 9 und 0 wählen AUX 1 bis 10.
+- Im AUX-Patcher stehen Medienpool, Schwarz und Windows-Aufnahmegeräte zur Auswahl. Kamera und HDMI-Capture liefern Bild. Die AUX-Belegung wird automatisch und in der Showdatei gespeichert. Frühere Showdateien lassen sich weiterhin öffnen.
+- Bei 1180 × 740 bleiben alle zehn AUX-Kacheln auch mit geöffneten Optionen sichtbar. Ein Livebild von Kamera oder HDMI und die Ausgabe auf einem Beamer wurden noch nicht an Hardware geprüft.
+
 ## 0.5.2 – Video-Vorschau und NX-UI-System
 
 - Videos in der Vorschau werden erst als bereit angezeigt, wenn sie auf ihrem ersten Bild angehalten sind. Beim erneuten Vorladen startet der Decoder wieder am Anfang.

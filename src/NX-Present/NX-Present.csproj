@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>NX-Present</AssemblyName>
     <RootNamespace>NXPresent</RootNamespace>
-    <Version>0.5.2</Version>
+    <Version>0.6.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\nx-present.ico</ApplicationIcon>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

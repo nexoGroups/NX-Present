@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace NXPresent;
 
-public enum SurfaceMode { Program, Preview }
+public enum SurfaceMode { Program, Preview, Me1, Me2 }
 
 /// <summary>
 /// The compositor. It renders the switcher state: the program source, the incoming source during a transition,
@@ -40,8 +40,15 @@ public sealed class MixerSurface : Grid
         SizeChanged += (_, _) => ApplyPosition();
     }
 
-    /// <summary>Program shows the mix and the fade to black; Preview shows only the preview source.</summary>
+    /// <summary>Program shows the composite output. The ME monitors show their individual feeds.</summary>
     public SurfaceMode Mode { get; set; } = SurfaceMode.Program;
+    internal bool IsOnAir => Mode switch
+    {
+        SurfaceMode.Me1 => switcher?.LiveMe == 1,
+        SurfaceMode.Me2 => switcher?.LiveMe == 2,
+        _ => Mode == SurfaceMode.Program
+    };
+    internal SourceFeed? CurrentFeed => IsOnAir ? switcher?.Program : switcher?.Preview;
     public Stretch Fit
     {
         get => fit;
@@ -79,13 +86,8 @@ public sealed class MixerSurface : Grid
     private void Rebuild()
     {
         if (switcher == null) return;
-        SourceFeed? bottomFeed, topFeed = null;
-        if (Mode == SurfaceMode.Preview) bottomFeed = switcher.Preview;
-        else
-        {
-            bottomFeed = switcher.Program;
-            if (switcher.IsTransitioning) topFeed = switcher.Preview;
-        }
+        var bottomFeed = CurrentFeed;
+        var topFeed = Mode == SurfaceMode.Program && switcher.IsTransitioning ? switcher.Preview : null;
         var wanted = new List<SourceFeed>(2);
         if (bottomFeed is { IsDisposed: false }) wanted.Add(bottomFeed);
         if (topFeed is { IsDisposed: false } && !ReferenceEquals(topFeed, bottomFeed)) wanted.Add(topFeed);
@@ -114,10 +116,10 @@ public sealed class MixerSurface : Grid
         string? text = null;
         if (switcher != null)
         {
-            if (Mode == SurfaceMode.Preview)
+            if (!IsOnAir)
             {
                 if (switcher.PreviewLoading) text = "LÄDT …";
-                else if (switcher.Preview == null) text = switcher.PreviewCue == null ? "KEINE VORSCHAU" : "NICHT VERFÜGBAR";
+                else if (switcher.Preview == null) text = switcher.PreviewCue == null ? "KEINE QUELLE" : "NICHT VERFÜGBAR";
                 else if (switcher.Preview.State == FeedState.Failed) text = "FEHLER\n" + switcher.Preview.Error;
             }
             else if (switcher.Program.State == FeedState.Failed) text = "QUELLE GESTÖRT\n" + switcher.Program.Error;

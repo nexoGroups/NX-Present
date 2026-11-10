@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using LibVLCSharp.Shared;
 using NXPresent;
@@ -22,8 +23,11 @@ static class MediaChecks
         await VideoFeedChecks(check, engine, clip);
         int custom = Array.IndexOf(args, "--video");
         if (custom >= 0 && custom + 1 < args.Length) await UserVideo(check, engine, Path.GetFullPath(args[custom + 1]));
-        await WebFeedChecks(check, folder);
+        await WebFeedChecks(check, folder, engine, clip);
         await SwitcherWithMedia(check, engine, folder, clip);
+        var captureSources = await CaptureFeed.FindSourcesAsync().WaitAsync(TimeSpan.FromSeconds(15));
+        check(captureSources.All(cue => cue.Kind == CueKind.Capture && !string.IsNullOrWhiteSpace(cue.Source)),
+            $"Windows video input enumeration succeeds ({captureSources.Length} devices)");
     }
 
     static void VideoSizes(Action<bool, string> check)
@@ -193,7 +197,7 @@ static class MediaChecks
         await feed.Settle();
     }
 
-    static async Task WebFeedChecks(Action<bool, string> check, string folder)
+    static async Task WebFeedChecks(Action<bool, string> check, string folder, LibVLC engine, string clip)
     {
         var host = new WebHost(Path.Combine(folder, "Browser"));
         using var server = new TcpListener(IPAddress.Loopback, 0);
@@ -241,6 +245,25 @@ static class MediaChecks
             try { await opening; } catch (OperationCanceledException) { }
             await Task.Delay(300);
             check(slow.IsDisposed && Application.Current.Windows.Count == windows, "A page disposed while loading leaves nothing behind");
+
+            var video = Cue.FromFile(clip);
+            var web = new Cue(CueKind.Website, "Fixture", address);
+            var settings = new AppSettings { Cues = [video, web], AuxSources = [video, web], OutputDevice = @"\.DISPLAY99" };
+            var window = new MainWindow(engine, settings, Path.Combine(folder, "aux-media-settings.json"))
+            {
+                Left = -20000, Top = -20000, WindowStartupLocation = WindowStartupLocation.Manual, ShowActivated = false
+            };
+            window.Show();
+            try
+            {
+                var channels = ((ItemsControl)window.FindName("AuxTiles")).Items.OfType<AuxChannel>().Take(2).ToArray();
+                check(await Until(() => channels.Length == 2 && channels.All(channel => channel.Source.Thumbnail is BitmapSource { IsFrozen: true }), 25000),
+                    "The AUX tiles capture stills from real video and web sources");
+                check(window.Mixer.Program.Cue == Cue.Black && window.Mixer.Preview == null,
+                    "Sampling AUX thumbnails does not load either ME");
+            }
+            finally { window.Close(); }
+            VideoFeed.WaitForShutdown(3000);
         }
         finally { cancellation.Cancel(); server.Stop(); await serving; }
     }

@@ -51,6 +51,8 @@ public sealed class Switcher : IDisposable
     }
 
     public SourceFeed Program => program;
+    public int LiveMe { get; private set; } = 1;
+    public int StandbyMe => 3 - LiveMe;
     public SourceFeed? Preview => preview;
     /// <summary>The source requested for preview, also while it is still loading.</summary>
     public Cue? PreviewCue => previewCue;
@@ -111,7 +113,7 @@ public sealed class Switcher : IDisposable
     public Task<bool> SetPreviewAsync(Cue cue)
     {
         if (disposed) return Task.FromResult(false);
-        if (IsTransitioning) { Notify("Während eines Übergangs kann die Vorschau nicht gewechselt werden."); return Task.FromResult(false); }
+        if (IsTransitioning) { Notify("Während eines Übergangs kann die Quelle nicht gewechselt werden."); return Task.FromResult(false); }
         if (previewTask != null && previewLoading && previewCue == cue) return previewTask;
         if (preview != null && !previewLoading && preview.Cue == cue && preview.State == FeedState.Ready) return Task.FromResult(true);
         previewLoad?.Cancel();
@@ -129,7 +131,7 @@ public sealed class Switcher : IDisposable
         {
             App.Log(ex);
             previewLoading = false;
-            Notify("Vorschau nicht möglich: " + ex.Message);
+            Notify("Quelle konnte nicht vorbereitet werden: " + ex.Message);
             Raise(SwitcherChange.Feeds);
             return Task.FromResult(false);
         }
@@ -151,16 +153,16 @@ public sealed class Switcher : IDisposable
         preview = feed;
         ApplyAudio();
         Raise(SwitcherChange.Feeds);
-        if (feed.State == FeedState.Failed) Notify("Vorschau fehlgeschlagen: " + feed.Error);
+        if (feed.State == FeedState.Failed) Notify("Quelle konnte nicht geladen werden: " + feed.Error);
         return feed.State == FeedState.Ready;
     }
 
     private bool CanTake(out string reason)
     {
         reason = "";
-        if (preview == null) reason = previewLoading ? "Die Vorschau wird noch geladen …" : "Keine Vorschau gewählt.";
-        else if (preview.State == FeedState.Failed) reason = "Die Vorschau ist fehlgeschlagen: " + preview.Error;
-        else if (preview.State != FeedState.Ready) reason = "Die Vorschau ist noch nicht bereit.";
+        if (preview == null) reason = previewLoading ? "Die Quelle wird noch geladen …" : "Keine Quelle für den Übergang gewählt.";
+        else if (preview.State == FeedState.Failed) reason = "Laden der Quelle fehlgeschlagen: " + preview.Error;
+        else if (preview.State != FeedState.Ready) reason = "Die Quelle ist noch nicht bereit.";
         return reason.Length == 0;
     }
 
@@ -266,6 +268,7 @@ public sealed class Switcher : IDisposable
         position = 0;
         program = incoming;
         preview = outgoing;
+        LiveMe = StandbyMe;
         previewCue = outgoing.Cue;
         previewLoading = false;
         outgoing.Arm();

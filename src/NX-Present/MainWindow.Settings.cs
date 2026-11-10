@@ -37,8 +37,6 @@ public partial class MainWindow
         AutoStartOutput.IsChecked = savedSettings.AutoStartOutput;
         CheckUpdatesAtStart.IsChecked = savedSettings.CheckUpdatesAtStart;
         AutoInstallUpdates.IsChecked = savedSettings.AutoInstallUpdates;
-        ProgramLock.IsChecked = !savedSettings.ProgramBusUnlocked;
-        ProgramLock.Content = savedSettings.ProgramBusUnlocked ? "" : "";
         FtbPicker.SelectedItem = FtbPicker.Items.Cast<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == savedSettings.FtbMilliseconds.ToString(CultureInfo.InvariantCulture)) ?? FtbPicker.Items[2];
         switcher.Volume = savedSettings.Volume;
         switcher.Muted = savedSettings.Muted;
@@ -109,10 +107,10 @@ public partial class MainWindow
                 Protection = Protection.IsEnabled ? Protection.IsChecked == true : savedSettings.Protection,
                 Volume = switcher.Volume, Muted = switcher.Muted, Repeat = switcher.Loop,
                 ImageFit = FitPicker.SelectedIndex, Transition = switcher.Style, TransitionMilliseconds = switcher.DurationMilliseconds,
-                FtbMilliseconds = switcher.FtbMilliseconds, ProgramBusUnlocked = ProgramLock.IsChecked != true,
+                FtbMilliseconds = switcher.FtbMilliseconds,
                 AnimatePatterns = switcher.AnimatePatterns, AutoStartOutput = AutoStartOutput.IsChecked == true,
                 CheckUpdatesAtStart = CheckUpdatesAtStart.IsChecked == true, AutoInstallUpdates = AutoInstallUpdates.IsChecked == true, UpdateAttempt = updateAttempt,
-                Cues = cues.ToList(), Prepared = preview == Cue.Black ? null : preview, ShowPath = showPath, WebsiteDraft = websiteDraft, TextDraft = textDraft,
+                Cues = cues.ToList(), AuxSources = SnapshotAux(), Prepared = preview == Cue.Black ? null : preview, ShowPath = showPath, WebsiteDraft = websiteDraft, TextDraft = textDraft,
                 Rundown = CueModePage.Rundown.Snapshot(), NextRunCueId = CueModePage.Rundown.Next?.Id,
                 WindowX = bounds?.Left, WindowY = bounds?.Top, WindowWidth = bounds is Native.Rect b ? b.Right - b.Left : null,
                 WindowHeight = bounds is Native.Rect b2 ? b2.Bottom - b2.Top : null, Maximized = WindowState == WindowState.Maximized

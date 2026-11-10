@@ -47,12 +47,13 @@ public partial class MainWindow : Window
         InitializeComponent();
         BuildTransitionControls();
         InitializePool();
-        PreviewMonitor.Attach(switcher);
-        ProgramMonitor.Attach(switcher);
+        Me1Monitor.Attach(switcher);
+        Me2Monitor.Attach(switcher);
         ReadDisplays();
         try { if (!isolated) { audio = new AudioRouting(); ReadAudio(); } }
         catch (Exception ex) { App.Log(ex); Status("Audiogeräte konnten nicht gelesen werden: " + ex.Message); }
         RestoreControls();
+        InitializeAux();
         interfaceReady = true;
         dirty = false;
         InitializeInterface();
@@ -172,7 +173,7 @@ public partial class MainWindow : Window
             presentationPerformance = new PresentationPerformance();
             ApplyProtection();
             UpdateOutputUi();
-            Status("Ausgabe aktiv auf " + choice.Label + ". Was im Programm-Monitor steht, steht auf der Leinwand.");
+            Status("Ausgabe aktiv auf " + choice.Label + $". ME{switcher.LiveMe} ist gewählt.");
             Activate();
         }
         catch (Exception ex) { App.Log(ex); CloseOutput(); Status("Ausgabe konnte nicht starten: " + ex.Message); }
@@ -241,37 +242,22 @@ public partial class MainWindow : Window
     {
         TransitionBar.EndDrag();
         TransitionBar.Value = 0;
-        Status("Programm: " + (incoming.Cue == Cue.Black ? "Schwarz" : incoming.Cue.Name));
+        Status(CueModePage.IsVisible ? $"Programm · {incoming.Cue.Name}" : $"ME{switcher.LiveMe} auf Projektion · {incoming.Cue.Name}");
     }
 
     private void CutClicked(object sender, RoutedEventArgs e) => switcher.Cut();
     private void AutoClicked(object sender, RoutedEventArgs e) => switcher.Auto();
     private void FtbClicked(object sender, RoutedEventArgs e) => switcher.ToggleFtb();
     private void BlackMuteClicked(object sender, RoutedEventArgs e) => switcher.SetBlackMute(BlackMuteButton.IsChecked == true);
-    private async Task SelectPreview(Cue cue)
+    private async Task SelectStandby(Cue cue, string? auxName = null)
     {
-        if (await switcher.SetPreviewAsync(cue)) Status("Vorschau: " + (cue == Cue.Black ? "Schwarz" : cue.Name) + ". CUT oder AUTO schaltet sie auf Programm.");
+        int me = switcher.StandbyMe;
+        if (await switcher.SetPreviewAsync(cue))
+            Status($"ME{me} bereit · {(auxName == null ? cue.Name : auxName + " · " + cue.Name)}");
     }
     private async Task HotCut(Cue cue)
     {
         if (await switcher.SetPreviewAsync(cue)) switcher.Cut();
-    }
-    private async void PreviewKeyClicked(object sender, RoutedEventArgs e)
-    {
-        if (((FrameworkElement)sender).DataContext is BusKey key) await SelectPreview(key.Cue);
-    }
-    private async void ProgramKeyClicked(object sender, RoutedEventArgs e)
-    {
-        if (ProgramLock.IsChecked == true) { Status("Die Programm-Tasten sind gesperrt. Mit dem Schloss schaltest du die Direktwahl frei."); return; }
-        if (((FrameworkElement)sender).DataContext is BusKey key) await HotCut(key.Cue);
-    }
-    private void ProgramLockChanged(object sender, RoutedEventArgs e)
-    {
-        if (!interfaceReady) return;
-        bool locked = ProgramLock.IsChecked == true;
-        ProgramLock.Content = locked ? "" : "";
-        Status(locked ? "Programm-Tasten gesperrt." : "Direktwahl freigegeben: Ein Klick auf eine Programm-Taste schneidet sofort.");
-        QueueSettingsSave();
     }
     private void ReloadClicked(object sender, RoutedEventArgs e) => switcher.Preview?.Reload();
 
@@ -297,8 +283,8 @@ public partial class MainWindow : Window
     }
     private void ApplyFit()
     {
-        PreviewMonitor.Picture.Fit = fit;
-        ProgramMonitor.Picture.Fit = fit;
+        Me1Monitor.Picture.Fit = fit;
+        Me2Monitor.Picture.Fit = fit;
         CueModePage.SetFit(fit);
         if (output != null) output.Surface.Fit = fit;
     }
@@ -340,7 +326,7 @@ public partial class MainWindow : Window
             if (!e.IsRepeat) CueModePage.Stop();
             return;
         }
-        if (Keyboard.Modifiers != ModifierKeys.None || e.IsRepeat || Keyboard.FocusedElement is TextBox or ComboBox || SettingsPage.Visibility == Visibility.Visible || HelpPage.Visibility == Visibility.Visible) return;
+        if (Keyboard.Modifiers != ModifierKeys.None || e.IsRepeat || Keyboard.FocusedElement is TextBox or ComboBox || (!cues && !MixerPage.IsVisible)) return;
         switch (e.Key)
         {
             case Key.Space: e.Handled = true; if (cues) CueModePage.Go(); else switcher.Auto(); break;
@@ -354,8 +340,8 @@ public partial class MainWindow : Window
                 else if (KeyToDigit(e.Key) is int digit)
                 {
                     e.Handled = true;
-                    var key = digit == 0 ? blackKey : poolKeys.FirstOrDefault(k => k.Number == digit);
-                    if (key != null) _ = SelectPreview(key.Cue);
+                    var channel = auxChannels[digit == 0 ? 9 : digit - 1];
+                    _ = SelectStandby(channel.Source.Cue, channel.Name);
                 }
                 break;
         }
@@ -383,6 +369,7 @@ public partial class MainWindow : Window
         settingsTimer.Stop();
         CloseOutput();
         closing = true;
+        auxSampleCancellation?.Cancel();
         try { updateWork?.Cancel(); } catch (ObjectDisposedException) { }
         timer.Stop();
         CompositionTarget.Rendering -= OnRendering;
@@ -390,8 +377,8 @@ public partial class MainWindow : Window
         SystemEvents.SessionSwitch -= SessionChanged;
         Native.UnregisterHotKey(new WindowInteropHelper(this).Handle, EmergencyHotkey);
         hwndSource?.RemoveHook(WindowMessage);
-        PreviewMonitor.Picture.Detach();
-        ProgramMonitor.Picture.Detach();
+        Me1Monitor.Picture.Detach();
+        Me2Monitor.Picture.Detach();
         CueModePage.Detach();
         switcher.Dispose();
         try { audio?.Dispose(); } catch (Exception ex) { App.Log(ex); MessageBox.Show(this, "Die vorherige Tonauswahl konnte nicht vollständig wiederhergestellt werden. Bitte die Windows-Tonausgabe prüfen.", "NX-Present"); }

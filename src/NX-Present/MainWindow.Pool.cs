@@ -13,9 +13,8 @@ namespace NXPresent;
 
 public partial class MainWindow
 {
-    private readonly BusKey blackKey = new(Cue.Black, 0);
+    private readonly BusKey blackKey = new(Cue.Black);
     private readonly ObservableCollection<BusKey> poolKeys = new();
-    private readonly ObservableCollection<BusKey> busKeys = new();
     private ICollectionView poolView = null!;
     private string poolFilter = "all";
     private string websiteDraft = "https://", textDraft = "";
@@ -25,8 +24,6 @@ public partial class MainWindow
         poolView = CollectionViewSource.GetDefaultView(poolKeys);
         poolView.Filter = MatchesPool;
         PoolItems.ItemsSource = poolView;
-        ProgramBus.ItemsSource = busKeys;
-        PreviewBus.ItemsSource = busKeys;
         cues.CollectionChanged += (_, _) => RebuildKeys();
         AddDefaultSources();
     }
@@ -37,23 +34,19 @@ public partial class MainWindow
         cues.Add(new Cue(CueKind.Clock, "Uhr", "local"));
     }
 
-    /// <summary>Keeps the keys of the buses and cards of the pool in step with the library, reusing the existing ones.</summary>
+    /// <summary>Keeps the cards of the media pool in step with the library, reusing the existing ones.</summary>
     private void RebuildKeys()
     {
         var unused = poolKeys.ToList();
         poolKeys.Clear();
-        int number = 1;
         foreach (var cue in cues)
         {
             var key = unused.FirstOrDefault(k => k.Cue == cue);
-            if (key != null) unused.Remove(key); else key = new BusKey(cue, number);
-            key.Number = number++;
+            if (key != null) unused.Remove(key); else key = new BusKey(cue);
             key.RequestThumbnail();
             poolKeys.Add(key);
         }
-        busKeys.Clear();
-        busKeys.Add(blackKey);
-        foreach (var key in poolKeys) busKeys.Add(key);
+        if (!loadingShow) RefreshAuxChoices();
         if (interfaceReady) SyncTally();
         RefreshPool();
     }
@@ -88,12 +81,12 @@ public partial class MainWindow
 
     private async void PoolCardClicked(object sender, RoutedEventArgs e)
     {
-        if (((FrameworkElement)sender).DataContext is BusKey key) await SelectPreview(key.Cue);
+        if (((FrameworkElement)sender).DataContext is BusKey key) await SelectStandby(key.Cue);
     }
     private static BusKey? KeyOf(object sender) => ((sender as MenuItem)?.Parent as ContextMenu)?.PlacementTarget is FrameworkElement { DataContext: BusKey key } ? key : null;
     private async void PoolPreviewClicked(object sender, RoutedEventArgs e)
     {
-        if (KeyOf(sender) is BusKey key) await SelectPreview(key.Cue);
+        if (KeyOf(sender) is BusKey key) await SelectStandby(key.Cue);
     }
     private async void PoolCutClicked(object sender, RoutedEventArgs e)
     {
@@ -126,7 +119,7 @@ public partial class MainWindow
             try { var cue = Cue.FromFile(path); cues.Add(cue); last = cue; added++; }
             catch (Exception ex) { error = ex.Message; }
         }
-        if (added > 0) { dirty = true; AllFilter.IsChecked = true; PoolSearch.Clear(); _ = SelectPreview(last!); }
+        if (added > 0) { dirty = true; AllFilter.IsChecked = true; PoolSearch.Clear(); _ = SelectStandby(last!); }
         Status(added + " Datei(en) hinzugefügt." + (error == null ? "" : " " + error));
     }
     private void AddWebsite(object sender, RoutedEventArgs e)
@@ -151,7 +144,7 @@ public partial class MainWindow
         dirty = true;
         AllFilter.IsChecked = true;
         PoolSearch.Clear();
-        _ = SelectPreview(cue);
+        _ = SelectStandby(cue);
     }
 
     // ---- show files ----
@@ -164,14 +157,14 @@ public partial class MainWindow
             if (dialog.ShowDialog(this) != true) return false;
             path = dialog.FileName;
         }
-        try { ShowFile.Save(path, cues, CueModePage.Rundown.Snapshot()); showPath = path; dirty = false; Status("Show mit Cue-Ablauf gespeichert: " + Path.GetFileName(path) + ". Mediendateien werden verknüpft, nicht eingebettet."); return true; }
+        try { ShowFile.Save(path, cues, CueModePage.Rundown.Snapshot(), SnapshotAux()); showPath = path; dirty = false; Status("Show mit Cue-Ablauf und AUX-Belegung gespeichert: " + Path.GetFileName(path) + "."); return true; }
         catch (Exception ex) { App.Log(ex); Status("Speichern fehlgeschlagen: " + ex.Message); return false; }
     }
     private void SaveShow(object sender, RoutedEventArgs e) => SaveCurrentShow(true);
     private bool ConfirmUnsaved()
     {
         if (!dirty || loadingShow) return true;
-        var result = MessageBox.Show(this, "Änderungen an Pool und Cue-Ablauf speichern?", "NX-Present", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var result = MessageBox.Show(this, "Änderungen an Medienpool, Cue-Ablauf und AUX-Belegung speichern?", "NX-Present", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         return result == MessageBoxResult.No || (result == MessageBoxResult.Yes && SaveCurrentShow(false));
     }
     private void OpenShow(object sender, RoutedEventArgs e)
@@ -187,6 +180,7 @@ public partial class MainWindow
             loadingShow = true;
             cues.Clear();
             foreach (var cue in list) cues.Add(cue);
+            RestoreAux(document.AuxSources);
             CueModePage.Rundown.Restore(document.Rundown ?? []);
             loadingShow = false;
             showPath = dialog.FileName; dirty = false;

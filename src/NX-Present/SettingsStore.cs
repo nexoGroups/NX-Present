@@ -20,10 +20,9 @@ public sealed record AppSettings
     public int TransitionMilliseconds { get; init; } = 500;
     public bool AnimatePatterns { get; init; } = true;
     public bool AutoStartOutput { get; init; } = true;
-    /// <summary>Whether the program bus accepts clicks (hot cut). Off by default so that no stray click changes the screen.</summary>
-    public bool ProgramBusUnlocked { get; init; }
     public int FtbMilliseconds { get; init; } = 1000;
     public List<Cue>? Cues { get; init; }
+    public List<Cue>? AuxSources { get; init; }
     public List<RunCueData>? Rundown { get; init; }
     public Guid? NextRunCueId { get; init; }
     public Cue? Prepared { get; init; }
@@ -55,6 +54,7 @@ public static class SettingsStore
         if (settings.Cues != null)
             foreach (var cue in settings.Cues) Cue.Validate(cue);
         if (settings.Prepared != null) Cue.Validate(settings.Prepared);
+        AuxRouting.Validate(settings.AuxSources);
         if (settings.Rundown != null) CueRundown.Validate(settings.Rundown);
         return settings with { Volume = Math.Clamp(settings.Volume, 0, 100), ImageFit = Math.Clamp(settings.ImageFit, 0, 2), TransitionMilliseconds = Math.Clamp(settings.TransitionMilliseconds, 100, 5000), FtbMilliseconds = Math.Clamp(settings.FtbMilliseconds, 0, 5000) };
     }
@@ -63,6 +63,7 @@ public static class SettingsStore
         if (settings.Cues?.Count > 10000) throw new InvalidDataException("Die Medienliste ist zu groß.");
         if (settings.Cues != null) foreach (var cue in settings.Cues) Cue.Validate(cue);
         if (settings.Prepared != null) Cue.Validate(settings.Prepared);
+        AuxRouting.Validate(settings.AuxSources);
         if (settings.Rundown != null) CueRundown.Validate(settings.Rundown);
         path ??= PathName;
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);

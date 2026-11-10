@@ -85,7 +85,7 @@ public partial class MainWindow
     {
         var programCue = switcher.Program.Cue;
         var previewCue = switcher.PreviewCue;
-        foreach (var key in busKeys)
+        foreach (var key in poolKeys)
         {
             key.IsProgram = key.Cue == programCue;
             key.IsPreview = previewCue != null && key.Cue == previewCue;
@@ -115,7 +115,7 @@ public partial class MainWindow
         var feed = switcher.Preview;
         var cue = feed?.Cue ?? switcher.PreviewCue;
         InfoName.Text = cue == null ? "—" : cue == Cue.Black ? "Schwarz" : cue.Name;
-        InfoDetail.Text = cue == null ? "Wähle eine Quelle im Pool oder in der Vorschau-Zeile." : cue == Cue.Black ? "Permanenter Schwarz-Eingang" : cue.Kind == CueKind.Website ? cue.Source : cue.Kind is CueKind.Image or CueKind.Video ? cue.Source : cue.Category;
+        InfoDetail.Text = cue == null ? "Wähle eine AUX-Kachel oder eine Quelle im Medienpool." : cue == Cue.Black ? "Permanenter Schwarz-Eingang" : cue.Kind == CueKind.Website ? cue.Source : cue.Kind is CueKind.Image or CueKind.Video ? cue.Source : cue.Category;
         ReloadButton.Visibility = feed is WebFeed ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -130,20 +130,23 @@ public partial class MainWindow
         StartOutputButton.IsEnabled = !active;
         StopOutputButton.IsEnabled = active;
         DisplayPicker.IsEnabled = !active;
-        ProgramMonitor.OutputActive = active;
+        Me1Monitor.OutputActive = active;
+        Me2Monitor.OutputActive = active;
         RefreshCueModeState();
     }
 
     private void NavigationChanged(object sender, RoutedEventArgs e)
     {
-        if (MixerPage == null || CueModePage == null || SettingsPage == null || HelpPage == null || PageTitle == null) return;
+        if (MixerPage == null || AuxPage == null || CueModePage == null || SettingsPage == null || HelpPage == null || PageTitle == null) return;
         string page = (sender as RadioButton)?.Tag as string ?? "mixer";
         MixerPage.Visibility = page == "mixer" ? Visibility.Visible : Visibility.Collapsed;
+        AuxPage.Visibility = page == "aux" ? Visibility.Visible : Visibility.Collapsed;
         CueModePage.Visibility = page == "cues" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPage.Visibility = page == "settings" ? Visibility.Visible : Visibility.Collapsed;
         HelpPage.Visibility = page == "help" ? Visibility.Visible : Visibility.Collapsed;
-        PageTitle.Text = page switch { "cues" => "Cue-Ablauf", "settings" => "Setup", "help" => "Hilfe", _ => "Mischer" };
+        PageTitle.Text = page switch { "aux" => "AUX-Patcher", "cues" => "Cue-Ablauf", "settings" => "Setup", "help" => "Hilfe", _ => "Mischer" };
         if (!interfaceReady) return;
+        if (page == "aux") _ = RefreshCaptureSourcesAsync();
         RefreshCueModeState();
     }
     private void OpenSettingsPage(object sender, RoutedEventArgs e) => SettingsNav.IsChecked = true;

@@ -3,7 +3,7 @@
 # NX-Present
 
 **Der Bildmischer für Präsentationen.**
-Vorschau wählen, Programm sehen, mit AUTO überblenden.
+Quelle über AUX wählen und zwischen ME1 und ME2 wechseln.
 
 [**Installer herunterladen**](https://github.com/nexoGroups/NX-Present/releases/latest) ·
 [Bedienung](docs/BEDIENUNG.md) ·
@@ -15,11 +15,11 @@ Vorschau wählen, Programm sehen, mit AUTO überblenden.
 ![Plattform](https://img.shields.io/badge/Plattform-Windows%20x64-blue)
 [![Lizenz](https://img.shields.io/badge/Lizenz-nichtkommerziell-lightgrey)](LICENSE.txt)
 
-![NX-Present: Vorschau- und Programm-Monitor, Übergangsfeld mit CUT, AUTO und Überblender, Tasten-Reihen für Programm und Vorschau, Medienpool](docs/images/mixer.png)
+![NX-Present: ME1 und ME2, Übergänge, zehn AUX-Kacheln und Medienpool](docs/images/mixer.png)
 
 </div>
 
-NX-Present ist ein Show-Control-Programm für Windows, aufgebaut wie ein Videomischer. Der **Programm-Monitor** zeigt in Echtzeit genau das Bild, das auf der Leinwand steht, auch bei Videos und Webseiten. Im **Vorschau-Monitor** bereitest du die nächste Quelle vor. **CUT** schaltet sie sofort auf Programm, **AUTO** blendet automatisch über, und mit dem **Überblender** mischst du von Hand.
+NX-Present ist ein Show-Control-Programm für Windows mit zwei festen Mischermonitoren, **ME1** und **ME2**. Die rote Markierung zeigt das für die Projektion gewählte ME. Mit **CUT**, **AUTO** oder dem **Überblender** wechselst du zum anderen ME.
 
 NX-Present verwendet das dunkle NX-UI-System im Bildmischer, im Cue Mode und im Setup.
 
@@ -31,12 +31,12 @@ NX-Present trennt diese beiden Welten wie ein Hardware-Mischer:
 
 ```mermaid
 flowchart LR
-    Q["Quellen<br/>Bild · Video · Web · Text · Uhr"] --> V["Vorschau-Monitor"]
-    V -- "CUT / AUTO / Überblender" --> P["Programm-Monitor"]
+    Q["Medienpool · Kamera · HDMI"] --> A["AUX 1–10"] --> V["ME1 / ME2"]
+    V -- "CUT / AUTO / Überblender" --> P["Projektionssignal"]
     P --> B["Beamer-Ausgabe"]
 ```
 
-Was du in der Vorschau-Zeile wählst, siehst du zuerst im Vorschau-Monitor. Ein Video wartet dort auf seinem ersten Bild. Auf der Leinwand ändert sich nichts, bis du **CUT** oder **AUTO** drückst. Danach tauschen Programm und Vorschau die Plätze, sodass du mit AUTO zwischen zwei Quellen hin und her blenden kannst.
+Ein Klick auf eine AUX-Kachel oder eine Quelle im Medienpool lädt sie ins inaktive ME. Ein Video wartet dort auf seinem ersten Bild. Beim Übergang bleiben die Quellen in ihren MEs, und die Projektion wechselt zum anderen ME.
 
 Das eignet sich für private Präsentationen, Hobbyprojekte und ehrenamtliche Veranstaltungen ohne kommerziellen Zweck. Die kostenlose Nutzung ist an die [Projektlizenz](LICENSE.txt) gebunden.
 
@@ -44,11 +44,11 @@ Das eignet sich für private Präsentationen, Hobbyprojekte und ehrenamtliche Ve
 
 ### Mischen
 
-- **Echter Viewer:** Der Programm-Monitor ist kein Standbild. Er zeigt dieselben Bilder wie die Ausgabe: laufende Videos, animierte Testbilder, die Uhr und Webseiten in Echtzeit. Es gibt keine Bildschirmaufnahme dazwischen.
+- **ME-Monitore:** ME1 und ME2 zeigen ihre Quellen in Echtzeit, einschließlich Videos, Webseiten, Uhr und Aufnahmegeräten.
 - **CUT und AUTO:** Sofortschnitt oder automatischer Übergang mit einstellbarer Dauer. Ein Video startet erst mit der Blende, sein Ton blendet mit.
 - **Überblender:** Von Hand mischen. Drückst du AUTO bei halb gezogenem Überblender, läuft der Rest der Blende automatisch.
-- **FTB und Schwarz + stumm:** Weich nach Schwarz samt Ton, oder sofort schwarz und stumm. Die Vorschau bleibt dabei unverändert.
-- **Programm- und Vorschau-Zeile:** Eine Taste je Quelle, mit den Ziffern 1 bis 9 wählbar, 0 wählt Schwarz. Die Programm-Tasten sind gegen Fehlklicks gesperrt, bis du sie freigibst.
+- **FTB und Schwarz + stumm:** Weich nach Schwarz samt Ton, oder sofort schwarz und stumm. Beide ME-Monitore zeigen weiterhin ihre Quellen.
+- **AUX-Patcher:** Zehn interne Kanäle mit Standbildern für Medienpool-Quellen, Schwarz und von Windows erkannte Videoeingänge. HDMI benötigt eine Capture-Karte. Kamera und HDMI liefern Bild.
 
 ### Sechs Übergänge
 
@@ -83,8 +83,8 @@ Der **Cue Mode** ist für Veranstaltungen mit fester Reihenfolge und eine Cue-Li
 - **Ausgabeschutz:** Die Ausgabe läuft im Vollbild im Vordergrund; die Maus lässt sich auf den Bedienmonitor begrenzen. Der globale Notausstieg **Strg + Alt + F10** gibt beides frei.
 - **Immer mit Schwarzbild:** Eine gestartete Ausgabe beginnt schwarz. Auf einem neuen PC wählst du den Beamer ausdrücklich selbst; NX-Present vermutet keine Anzeige.
 - **Gemeinsames Audiogerät:** Ein Gerät für Videodateien und Webseiten. Die vorherige Windows-Auswahl wird beim normalen Beenden wiederhergestellt.
-- **Ohne Beamer nutzbar:** Der Mischer läuft vollständig ohne Ausgabefenster. Der Programm-Monitor zeigt, was auf der Leinwand stünde, so lässt sich ein Ablauf an einem Monitor proben.
-- **Gespeichert wird automatisch:** Pool, Ablauf, Übergang, Dauer, Lautstärke, Geräte und Fenstergröße.
+- **Ohne Beamer nutzbar:** Der Mischer läuft vollständig ohne Ausgabefenster. Das gewählte ME bleibt markiert, sodass du an einem einzelnen Monitor proben kannst.
+- **Gespeichert wird automatisch:** Pool, AUX-Belegung, Ablauf, Übergang, Dauer, Lautstärke, Geräte und Fenstergröße.
 
 ### Updates
 
@@ -111,7 +111,7 @@ Das Setup legt das Programm unter `%LOCALAPPDATA%\NXPresent` ab. Eine eigene Ins
 2. Wähle beim ersten Start unter **Setup** den Ausgabe-Bildschirm.
 3. Wähle bei Bedarf das Audiogerät und klicke **Ton anwenden**.
 4. Starte die Ausgabe. Sie beginnt mit einem vollständigen Schwarzbild.
-5. Wähle eine Quelle in der **Vorschau-Zeile** oder im **Medienpool**. Sie erscheint im Vorschau-Monitor.
+5. Klicke auf eine **AUX-Kachel** oder eine Quelle im **Medienpool**. Sie erscheint im inaktiven ME.
 6. Drücke **AUTO** zum Überblenden oder **CUT** zum Schneiden.
 
 Zum Ausprobieren ohne eigene Medien liegt `examples/Demo.nxshow` bei, mit Testbildern, Uhr und Text.
@@ -120,7 +120,7 @@ Zum Ausprobieren ohne eigene Medien liegt `examples/Demo.nxshow` bei, mit Testbi
 | --- | --- |
 | **Leertaste**, **Strg + Enter** | AUTO (auf der Cue-Seite: GO) |
 | **Eingabetaste** | CUT |
-| **1 bis 9**, **0** | Quelle bzw. Schwarz in die Vorschau |
+| **1 bis 9**, **0** | AUX 1–9 bzw. AUX 10 ins inaktive ME laden |
 | **F** | Fade to Black ein / aus |
 | **Strg + B** | Sofort schwarz und stumm |
 | **Esc** | Cue-Seite: alle wartenden und laufenden Cues stoppen |

@@ -6,34 +6,32 @@ Verbinde Hauptmonitor und Beamer. Windows muss die Anzeigen **erweitern**, damit
 
 Mit **Ausgabe starten** beginnt die Projektion schwarz. **Maus und andere Fenster von der Leinwand fernhalten** aktiviert den Ausgabeschutz. Der globale Ausstieg **Strg + Alt + F10** bleibt erreichbar.
 
-Der Mischer arbeitet auch ohne Ausgabe. Dann zeigt der Programm-Monitor, was auf der Leinwand stünde. So lässt sich ein Ablauf an einem einzelnen Monitor proben.
+Der Mischer arbeitet auch ohne Ausgabe. Das für die Projektion gewählte ME ist rot markiert. So lässt sich ein Ablauf an einem einzelnen Monitor proben.
 
 ## Der Mischer
 
-Die Seite **Mischer** ist wie ein Videomischer aufgebaut.
+**ME1** links und **ME2** rechts zeigen ihre Quellen an festen Plätzen. Rot markiert das für die Projektion gewählte ME. Ein Video im inaktiven ME wartet auf seinem ersten Bild und lässt sich dort mit der Wiedergabeleiste prüfen.
 
-- **Vorschau-Monitor (links, grün):** die Quelle, die als Nächstes auf Programm gehen soll. Ein Video wartet auf seinem ersten Bild und hat unter dem Bild eine Wiedergabeleiste, um die Stelle zu prüfen. Webseiten, Texte, Uhr und Testbilder laufen live.
-- **Programm-Monitor (rechts, rot):** genau das Bild, das auf der Leinwand steht, in Echtzeit. Bei einem Übergang zeigt er die Mischung samt Prozentwert.
-- **Vorschau-Zeile:** eine Taste je Quelle. Ein Klick lädt die Quelle in die Vorschau. Die Tasten 1 bis 9 wählen die ersten neun Quellen des Pools, 0 wählt Schwarz.
-- **Programm-Zeile:** zeigt, was auf Programm liegt. Die Tasten sind mit dem **Schloss** gesperrt, damit kein Fehlklick die Leinwand ändert. Entsperrt schneidet ein Klick sofort auf diese Quelle.
-- **Medienpool:** alle Quellen als Karten mit Vorschaubild. Ein Klick lädt die Quelle in die Vorschau; über das Kontextmenü (rechte Maustaste) schneidest du sie sofort auf Programm oder entfernst sie aus dem Pool.
+- **AUX 1–10:** Jeder Kanal zeigt ein Standbild seiner Quelle. Ein Klick lädt sie ins inaktive ME. Die Tasten **1** bis **9** wählen AUX 1 bis 9, **0** wählt AUX 10.
+- **AUX-Patcher:** Wähle im eigenen Tab je Kanal eine Quelle aus dem Medienpool, Schwarz oder ein Windows-Aufnahmegerät. HDMI läuft über eine Capture-Karte. Externe Eingänge liefern Bild. Mit **Aufnahmegeräte neu erkennen** aktualisierst du die Liste.
+- **Medienpool:** alle Quellen als Karten mit Vorschaubild. Ein Klick lädt die Quelle ins inaktive ME. Das Kontextmenü bietet außerdem **Direkt übernehmen (CUT)** und **Aus dem Pool entfernen**.
 
 ### CUT, AUTO und Überblender
 
-- **CUT** (Eingabetaste) schaltet die Vorschau sofort auf Programm.
+- **CUT** (Eingabetaste) schaltet die Projektion sofort auf das andere ME.
 - **AUTO** (Leertaste, Strg + Enter) blendet mit dem gewählten Übergang und der eingestellten **Dauer** über. Ein Video startet erst mit der Blende, sein Ton blendet mit. Der Knopf leuchtet rot und zeigt den Fortschritt.
-- **Überblender:** Ziehe ihn von links nach rechts, um von Hand zu mischen. Am rechten Ende wird die Vorschau zum Programm; zurück am Anfang wird der Übergang abgebrochen. Drückst du AUTO bei halb gezogenem Überblender, läuft der Rest der Blende automatisch.
+- **Überblender:** Ziehe ihn von links nach rechts, um von Hand zu mischen. Am rechten Ende übernimmt das andere ME die Projektion. Zurück am Anfang brichst du den Übergang ab. Drückst du AUTO bei halb gezogenem Überblender, läuft der Rest der Blende automatisch.
 - **Übergangsart:** Wähle in der Leiste unter den Monitoren zwischen Überblenden, Über Schwarz, Wischen, Iris und Schieben. Daneben stellst du die Dauer ein.
 - **CUT während einer Blende** beendet sie sofort.
 
-Nach jedem Übergang tauschen Programm und Vorschau die Plätze: Die bisherige Quelle liegt nun in der Vorschau. Ein Video steht dort wieder auf seinem ersten Bild. So kannst du mit AUTO zwischen zwei Quellen hin und her blenden.
+Nach jedem Übergang wechselt die rote Markierung zum anderen ME. Die Quellen bleiben in ihren MEs. Ein Video im vorherigen ME steht wieder auf seinem ersten Bild. Änderungen im AUX-Patcher wirken beim nächsten Klick auf die Kachel.
 
 ### Schwarz
 
 - **FTB** (F) blendet das Programm weich nach Schwarz, auch der Ton. Ein zweiter Druck blendet zurück. Die Dauer stellst du unter Setup ein.
 - **SCHWARZ + STUMM** (Strg + B) wirkt sofort und schaltet den Ton ab. Videos laufen im Hintergrund weiter.
 
-Der Vorschau-Monitor bleibt bei beidem unverändert.
+Beide ME-Monitore zeigen weiterhin ihre Quellen.
 
 ### Ton und Bild
 
@@ -43,7 +41,7 @@ Der Vorschau-Monitor bleibt bei beidem unverändert.
 
 **+ Hinzufügen** im Medienpool bietet Bilder und Videos, Webseiten, Text und die Uhr. Dateien lassen sich auch in das Fenster ziehen. Mit dem Mausrad blätterst du waagerecht durch die Quellen. Fotos aus Kameras und Telefonen stehen aufrecht, auch wenn sie im Hochformat aufgenommen wurden.
 
-Eine Webseite läuft in einem unsichtbaren Browser und erscheint wie jede andere Quelle. **Webseite neu laden** findest du unter **Optionen → Quelle in der Vorschau**. Der Ton einer Webseite schaltet bei einer Blende um.
+Eine Webseite läuft in einem unsichtbaren Browser und erscheint wie jede andere Quelle. **Webseite neu laden** findest du unter **Optionen → Quelle im inaktiven ME**. Der Ton einer Webseite schaltet bei einer Blende um.
 
 ## Cue Mode: eine Show fahren
 
@@ -115,9 +113,9 @@ Die Hauptlautstärke regelt Videodateien. Webseiten haben ihre eigene Lautstärk
 
 ## Speichern, Umziehen und Beenden
 
-Die Konfiguration wird automatisch unter `%LOCALAPPDATA%\NX-Present` gespeichert. Dazu gehören Pool, Gerätewahl, Übergang und Dauer, Lautstärke und Fenstergröße. Bei einem späteren Start kann die gespeicherte Beamer-Ausgabe automatisch mit Schwarzbild einschalten. Die zuletzt gewählte Vorschau wird wieder geladen, geht aber nie von selbst auf Programm.
+Die Konfiguration wird automatisch unter `%LOCALAPPDATA%\NX-Present` gespeichert. Dazu gehören Pool, AUX-Belegung, Gerätewahl, Übergang und Dauer, Lautstärke und Fenstergröße. Bei einem späteren Start kann die gespeicherte Beamer-Ausgabe automatisch mit Schwarzbild einschalten. Die zuletzt vorbereitete Quelle wird wieder ins inaktive ME geladen.
 
-Eine `.nxshow`-Datei sichert den Pool zusätzlich. Sie enthält Verweise auf Medien. Beim Umziehen müssen diese Dateien ebenfalls mitgenommen werden. `examples/Demo.nxshow` zeigt Testbilder, Uhr und Text ohne zusätzliche Medien.
+Eine `.nxshow`-Datei sichert Medienpool, Cue-Ablauf und AUX-Belegung. Sie enthält Verweise auf Medien. Beim Umziehen müssen diese Dateien ebenfalls mitgenommen werden. `examples/Demo.nxshow` zeigt Testbilder, Uhr und Text ohne zusätzliche Medien.
 
 **Strg + Alt + F10** schließt nur die Ausgabe. **Programm beenden** unter **Setup** oder das X schließt die ganze Anwendung und gibt die Maus frei.
 
@@ -133,11 +131,11 @@ Die Deinstallation entfernt die Anwendung; persönliche Einstellungen und Browse
 
 ## Wenn etwas nicht funktioniert
 
-- **CUT und AUTO sind grau:** Es ist keine Quelle in der Vorschau, oder sie lädt noch. Der Vorschau-Monitor zeigt LÄDT oder FEHLER mit dem Grund.
+- **CUT und AUTO sind grau:** Das inaktive ME hat noch keine bereite Quelle. Der Monitor zeigt den Ladestatus oder den Fehler.
 - **Ein Video bleibt schwarz oder ruckelt:** Prüfe, ob die Datei in einem anderen Player läuft. Sehr hohe Auflösungen werden auf Full HD verkleinert, belasten die CPU aber trotzdem.
 - **Eine Webseite bleibt leer:** Prüfe Adresse, Internetverbindung und die Microsoft-Edge-WebView2-Laufzeit. Es werden nur HTTP- und HTTPS-Adressen unterstützt.
 - **Falsche Anzeige:** Schließe die Ausgabe, wähle unter Setup den richtigen Bildschirm und starte sie erneut.
 - **Maus bleibt begrenzt:** Nutze **Strg + Alt + F10**.
-- **Programm-Tasten reagieren nicht:** Sie sind gesperrt. Das Schloss neben PROGRAMM gibt sie frei.
+- **Kamera oder HDMI liefert kein Bild:** Prüfe das Gerät, das HDMI-Signal und den Kamerazugriff für Desktop-Apps in Windows. Aktualisiere danach die Geräteliste im AUX-Patcher.
 - **Medien fehlen nach dem Umziehen:** Lege die verknüpften Dateien wieder am passenden Ort ab oder füge sie neu hinzu.
 - **Bildrate schwankt:** Das Ziel garantiert keine durchgehend konstante Ausgabe. Auflösung, Grafiktreiber, Auslastung und Anzeigehardware beeinflussen das Ergebnis.

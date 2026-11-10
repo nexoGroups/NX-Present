@@ -5,13 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace NXPresent;
 
-public enum CueKind { Image, Video, Website, Pattern, Text, Clock }
+public enum CueKind { Image, Video, Website, Pattern, Text, Clock, Capture }
 public record Cue(CueKind Kind, string Name, string Source)
 {
     /// <summary>The permanent black input of the switcher. It is not part of the library.</summary>
     public static readonly Cue Black = new(CueKind.Pattern, "Schwarz", "blackout");
-    [JsonIgnore] public string Glyph => Kind switch { CueKind.Image => "", CueKind.Video => "", CueKind.Website => "", CueKind.Pattern => "", CueKind.Clock => "", _ => "" };
-    [JsonIgnore] public string Category => Kind switch { CueKind.Image => "BILD", CueKind.Video => "VIDEO", CueKind.Website => "WEBSEITE", CueKind.Pattern => "TESTBILD", CueKind.Clock => "UHR", _ => "TEXT" };
+    [JsonIgnore] public string Glyph => Kind switch { CueKind.Image => "", CueKind.Video => "", CueKind.Website => "", CueKind.Pattern => "", CueKind.Clock => "", CueKind.Capture => "", _ => "" };
+    [JsonIgnore] public string Category => Kind switch { CueKind.Image => "BILD", CueKind.Video => "VIDEO", CueKind.Website => "WEBSEITE", CueKind.Pattern => "TESTBILD", CueKind.Clock => "UHR", CueKind.Capture => "VIDEOEINGANG", _ => "TEXT" };
     [JsonIgnore] public string Detail => Kind is CueKind.Image or CueKind.Video ? Path.GetFileName(Source) : Kind == CueKind.Website ? Source : Category;
     public static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"];
     public static readonly string[] VideoExtensions = [".mp4", ".mkv", ".mov", ".avi", ".webm", ".m4v", ".wmv", ".mpeg", ".mpg", ".ts"];
@@ -36,5 +36,6 @@ public record Cue(CueKind Kind, string Name, string Source)
         if (cue == null || cue.Name == null || cue.Source == null || !Enum.IsDefined(cue.Kind)) throw new InvalidDataException("Ungültiger Inhalt.");
         if (cue.Kind == CueKind.Website && !TryWebsite(cue.Source, out _)) throw new InvalidDataException("Ungültige Webseitenadresse.");
         if (cue.Kind is CueKind.Image or CueKind.Video && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Der Dateipfad fehlt.");
+        if (cue.Kind == CueKind.Capture && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Das Aufnahmegerät fehlt.");
     }
 }

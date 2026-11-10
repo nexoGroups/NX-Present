@@ -28,6 +28,13 @@ class Program
             var expected = new List<Cue> { Cue.FromFile(Path.Combine(folder, "Medien", "Bühne.png")), new(CueKind.Text, "Gruß", "ÄÖÜ · Bühne"), new(CueKind.Pattern, "Raster", "grid") };
             ShowFile.Save(path, expected);
             Check(ShowFile.Load(path).SequenceEqual(expected), "Show roundtrip with relative paths and Unicode");
+            var aux = new List<Cue> { expected[0], Cue.Black, new(CueKind.Capture, "HDMI", "capture-device-id") };
+            ShowFile.Save(path, expected, auxSources: aux);
+            var routedShow = ShowFile.LoadDocument(path);
+            Check(routedShow.Version == 4 && routedShow.AuxSources!.SequenceEqual(aux), "Show roundtrip preserves AUX file paths and capture device identity");
+            rejected = false;
+            try { ShowFile.Save(path, expected, auxSources: Enumerable.Repeat(Cue.Black, 11).ToArray()); } catch (InvalidDataException) { rejected = true; }
+            Check(rejected && ShowFile.LoadDocument(path).AuxSources!.SequenceEqual(aux), "Invalid AUX routing does not overwrite an existing show");
             File.WriteAllText(path, "{\"Version\":99,\"Cues\":[]}");
             rejected = false; try { ShowFile.Load(path); } catch (InvalidDataException) { rejected = true; }
             Check(rejected, "Reject unknown show version");

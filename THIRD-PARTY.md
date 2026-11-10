@@ -1,10 +1,11 @@
-# Fremdkomponenten von NX-Present 0.4.0
+# Fremdkomponenten von NX-Present
 
 Die Projektlizenz von NX-Present gilt ausschließlich für den eigenen Programmcode und eigene Inhalte. Sie schränkt die eigenständigen Rechte an den folgenden Komponenten nicht ein. Die Anwendung verwendet getrennte, dynamisch geladene Bibliotheken; diese werden nicht verschlüsselt oder gegen einen Austausch gesperrt.
 
 | Komponente | Version | Lizenz und Quelle |
 | --- | --- | --- |
 | .NET / Windows Desktop Runtime | 10.0.14 | MIT und weitere Lizenzen; die vollständigen Laufzeithinweise liegen im installierten Programmordner als `LICENSE.txt` und `THIRD-PARTY-NOTICES.txt`; [dotnet/runtime](https://github.com/dotnet/runtime/tree/v10.0.14), [dotnet/wpf](https://github.com/dotnet/wpf/tree/v10.0.14) |
+| Microsoft Windows SDK für .NET | 10.0.19041.57 | Windows-API-Bindungen für Aufnahmegeräte. [SDK-Lizenz](https://aka.ms/WinSDKLicenseURL), [SDK-Paket](https://www.nuget.org/packages/Microsoft.Windows.SDK.NET.Ref/10.0.19041.57) |
 | LibVLCSharp und LibVLCSharp.WPF | 3.10.2 | LGPL-2.1-or-later; [Quellcode](https://github.com/videolan/libvlcsharp/tree/3.10.2), [Lizenztext](licenses/LibVLCSharp-LICENSE.txt) |
 | VideoLAN.LibVLC.Windows | 3.0.24 | Das verwendete NuGet-Paket wird von VideoLAN als LGPL-2.1-or-later bereitgestellt. Das separate Paket `.GPL` wird nicht verwendet. [Paket](https://www.nuget.org/packages/VideoLAN.LibVLC.Windows/3.0.24), [VLC-Quellen](https://download.videolan.org/pub/videolan/vlc/3.0.24/vlc-3.0.24.tar.xz), [Paketierung](https://github.com/mfkl/libvlc-nuget) |
 | Native Video-/Audio-Abhängigkeiten von VLC | Versionen gemäß VLC-3.0.24-Contrib-Rezepten | Eigene MIT-/BSD-/LGPL- und weitere Lizenztexte in ihren unveränderten Quellarchiven. Die VLC-Quellen enthalten die zugehörigen Buildrezepte und Patches unter `contrib/src` sowie Windows-Buildskripte unter `extras/package/win32`. |
@@ -15,7 +16,7 @@ Die Projektlizenz von NX-Present gilt ausschließlich für den eigenen Programmc
 
 ## Quellcode und Hinweise
 
-Neben dem Windows-Installer stellt die offizielle Veröffentlichung ein separates Archiv **NX-Present-ThirdParty-Sources-0.5.2.zip** bereit. Es enthält die unveränderten VLC- und LibVLCSharp-Quellen, den verwendeten Paketierungsquellstand, Quellarchive der Video-/Audio-Abhängigkeiten und ein Manifest mit Bezugsadressen und Prüfsummen. Diese Quellen und die darin enthaltenen Lizenz- und Copyrightdateien behalten ihre jeweiligen ursprünglichen Lizenzen. Sie fallen ausdrücklich nicht unter das Weitergabeverbot für NX-Present.
+Das Archiv **NX-Present-ThirdParty-Sources-0.6.0.zip** gehört zum Windows-Release. Es enthält die unveränderten VLC- und LibVLCSharp-Quellen, den verwendeten Paketierungsquellstand, Quellarchive der Video-/Audio-Abhängigkeiten und ein Manifest mit Bezugsadressen und Prüfsummen. Diese Quellen und die darin enthaltenen Lizenz- und Copyrightdateien behalten ihre jeweiligen ursprünglichen Lizenzen. Sie fallen ausdrücklich nicht unter das Weitergabeverbot für NX-Present.
 
 Die Windows-NuGet-Paketierung trennt GPL-Plugins in ein eigenes Paket. Die verwendete LGPL-Ausgabe schließt diese Plugins aus; das Paketierungsverfahren ist im mitgelieferten Quellstand dokumentiert. Die unveränderten VLC-Quellen enthalten zusätzlich GPL-lizenzierte Programmteile, die nicht Bestandteil der NX-Present-Anwendung sind. Die Beigabe des GPL-Lizenztextes für diese Quellen bedeutet keine Umlizenzierung von NX-Present unter die GPL.
 

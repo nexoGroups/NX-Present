@@ -7,40 +7,30 @@ using System.Windows.Threading;
 
 namespace NXPresent;
 
-/// <summary>One source as shown on the buses and in the media pool: its name, number, picture and tally state.</summary>
+/// <summary>A source shown in the AUX patcher or media pool.</summary>
 public sealed class BusKey : INotifyPropertyChanged
 {
-    private int number;
     private bool isProgram, isPreview, thumbnailRequested;
     private ImageSource? thumbnail;
+    private string? thumbnailError;
 
-    public BusKey(Cue cue, int number)
-    {
-        Cue = cue;
-        this.number = number;
-    }
+    public BusKey(Cue cue) => Cue = cue;
 
     public Cue Cue { get; }
     public bool IsBlack => Cue == Cue.Black;
-    public int Number
-    {
-        get => number;
-        set { if (number == value) return; number = value; Changed(nameof(Number)); Changed(nameof(NumberLabel)); }
-    }
-    /// <summary>The key on the keyboard that selects this source: 1 to 9, and 0 for black.</summary>
-    public string NumberLabel => IsBlack ? "0" : number is >= 1 and <= 9 ? number.ToString() : "";
     public string Name => IsBlack ? "SCHWARZ" : Cue.Name;
     public string Glyph => IsBlack ? "" : Cue.Glyph;
     public string Category => IsBlack ? "EINGANG" : Cue.Category;
     public bool IsProgram { get => isProgram; set { if (isProgram == value) return; isProgram = value; Changed(nameof(IsProgram)); } }
     public bool IsPreview { get => isPreview; set { if (isPreview == value) return; isPreview = value; Changed(nameof(IsPreview)); } }
-    public ImageSource? Thumbnail { get => thumbnail; private set { thumbnail = value; Changed(nameof(Thumbnail)); Changed(nameof(HasThumbnail)); } }
+    public ImageSource? Thumbnail { get => thumbnail; internal set { thumbnail = value; Changed(nameof(Thumbnail)); Changed(nameof(HasThumbnail)); } }
     public bool HasThumbnail => thumbnail != null;
+    public string? ThumbnailError { get => thumbnailError; internal set { thumbnailError = value; Changed(nameof(ThumbnailError)); } }
 
     /// <summary>Renders the picture for the media pool, once, off the UI thread where possible.</summary>
     public void RequestThumbnail()
     {
-        if (thumbnailRequested || IsBlack) return;
+        if (thumbnailRequested) return;
         thumbnailRequested = true;
         var dispatcher = Dispatcher.CurrentDispatcher;
         if (Cue.Kind == CueKind.Image)
@@ -52,7 +42,11 @@ public sealed class BusKey : INotifyPropertyChanged
                 catch (Exception) { return null; }
             }).ContinueWith(task =>
             {
-                if (task.Result != null) dispatcher.BeginInvoke(() => Thumbnail = task.Result);
+                dispatcher.BeginInvoke(() =>
+                {
+                    if (task.Result != null) Thumbnail = task.Result;
+                    else ThumbnailError = "Bilddatei konnte nicht gelesen werden.";
+                });
             });
         }
         else if (Cue.Kind is CueKind.Pattern or CueKind.Clock or CueKind.Text)

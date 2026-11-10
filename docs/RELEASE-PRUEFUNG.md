@@ -1,5 +1,12 @@
 # Releaseprüfung
 
+## 0.6.0
+
+- Release-Build ohne Compilerwarnungen oder Fehler. Alle 424 Prüfungen mit echter Video-Engine und WebView2 bestanden.
+- CUT, AUTO und Überblender wechseln die Projektion zwischen ME1 und ME2. Die AUX-Zuweisung bleibt in der Showdatei erhalten. Alle zehn Kacheln passen bei 1180 × 740 auch mit geöffneten Optionen.
+- Windows hat ein Aufnahmegerät erkannt. Die Tests haben Standbilder aus Videos und Webseiten erzeugt. Ein echtes Bild von Kamera oder HDMI sowie Ausgabe und Notausstieg mit angeschlossenem Beamer wurden noch nicht geprüft.
+- Setup und Pakete werden ohne eigene Code-Signatur gebaut. Smart App Control und die Aktualisierung einer installierten Kopie wurden für diesen Stand noch nicht geprüft.
+
 ## 0.5.1
 
 - Release-Build ohne Warnungen oder Fehler. Alle 373 Prüfungen der Standardsuite bestanden.
