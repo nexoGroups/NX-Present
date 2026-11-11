@@ -43,7 +43,7 @@ public sealed class TBar : FrameworkElement
         dc.DrawLine(new Pen(ThemeBrush("Ink"), 1), new Point(x, mid - 8), new Point(x, mid + 8));
     }
 
-    private Brush ThemeBrush(string key) => (Brush)FindResource(key);
+    private Brush ThemeBrush(string key) => TryFindResource(key) as Brush ?? Brushes.Gray;
 
     protected override void OnIsMouseDirectlyOverChanged(DependencyPropertyChangedEventArgs e)
     {

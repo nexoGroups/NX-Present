@@ -70,8 +70,61 @@ class Program
             Check(!RenderElement(new ClockView { CurrentTime = midnight }).SequenceEqual(RenderElement(new ClockView { CurrentTime = midnight.AddSeconds(1) })), "Projected clock renders changing time and date");
             Check(!RenderElement(new ClockView { CurrentTime = midnight.AddMilliseconds(100) }).SequenceEqual(RenderElement(new ClockView { CurrentTime = midnight.AddMilliseconds(600) })), "Clock progress moves smoothly between whole seconds");
             expected.Add(new Cue(CueKind.Clock, "Uhr", "local"));
+            var winCue = new Cue(CueKind.WindowCapture, "Notepad", "12345:notepad:Editor");
+            expected.Add(winCue);
+            var preShowModel = SceneModel.CreatePreShowTemplate();
+            var sceneCue = new Cue(CueKind.Scene, "Pre-Show Szene", preShowModel.ToJson());
+            expected.Add(sceneCue);
             ShowFile.Save(path, expected);
-            Check(ShowFile.Load(path).SequenceEqual(expected), "Clock cue show roundtrip preserves existing kinds");
+            Check(ShowFile.Load(path).SequenceEqual(expected), "Clock, WindowCapture and Scene cue show roundtrip preserves existing kinds");
+            Check(winCue.Category == "ANWENDUNG", "WindowCapture category is ANWENDUNG");
+            Check(sceneCue.Category == "SZENE", "Scene category is SZENE");
+            bool winValidateFailed = false;
+            try { Cue.Validate(new Cue(CueKind.WindowCapture, "Test", "")); } catch (InvalidDataException) { winValidateFailed = true; }
+            Check(winValidateFailed, "WindowCapture without source is rejected");
+            bool sceneValidateFailed = false;
+            try { Cue.Validate(new Cue(CueKind.Scene, "Test", "")); } catch (InvalidDataException) { sceneValidateFailed = true; }
+            Check(sceneValidateFailed, "Scene without source is rejected");
+            var sceneModel = SceneModel.FromJson(sceneCue.Source);
+            Check(sceneModel != null && sceneModel.Items.Count > 0, "SceneModel parses from PreShow JSON");
+            var sceneRoundtrip = sceneModel!.ToJson();
+            var sceneModel2 = SceneModel.FromJson(sceneRoundtrip);
+            Check(sceneModel2 != null && sceneModel2.Items.Count == sceneModel.Items.Count, "SceneModel serialization roundtrip");
+            Check(SceneModel.CreateMinimalSongTemplate().Items.Count > 0, "Minimal music scene template parses");
+            Check(SceneModel.CreateLowerThirdTemplate().Items.Count > 0, "Lower third scene template parses");
+            Check(SceneModel.CreateCinemaCountdownTemplate().Items.Count > 0, "Cinema countdown scene template parses");
+            var videoRunCue = new RunCue(new RunCueData(Guid.NewGuid(), expected[0], InPointMilliseconds: 15000, OutPointMilliseconds: 160000));
+            Check(videoRunCue.InPointMilliseconds == 15000 && videoRunCue.OutPointMilliseconds == 160000, "RunCue preserves video in/out trim times");
+            var tempVideo = Path.Combine(folder, "sample.mp4");
+            File.WriteAllBytes(tempVideo, [0]);
+            var videoCue = new Cue(CueKind.Video, "Film", tempVideo);
+            var invalidTrimCue = new RunCue(new RunCueData(Guid.NewGuid(), videoCue, InPointMilliseconds: 20000, OutPointMilliseconds: 10000));
+            Check(invalidTrimCue.Problem != null && invalidTrimCue.Problem.Contains("In-Point liegt hinter oder auf dem Out-Point"), "RunCue detects invalid in/out trim points (in >= out)");
+            invalidTrimCue.OutPointMilliseconds = 30000;
+            Check(invalidTrimCue.Problem == null, "RunCue clears trim warning when out > in");
+            var aspectBox = new AspectBox();
+            aspectBox.Measure(new Size(1920, 1920));
+            Check(Math.Abs(aspectBox.DesiredSize.Width - 1920) < 0.1 && Math.Abs(aspectBox.DesiredSize.Height - 1080) < 0.1, "AspectBox enforces 16:9 aspect ratio");
+            var sceneCanvas = new SceneCanvasView(SceneModel.CreateCinemaCountdownTemplate()) { IsEditorMode = true };
+            Check(sceneCanvas.Model.Items.Count > 0, "SceneCanvasView loads countdown items");
+            sceneCanvas.Dispose();
+            Check(true, "SceneCanvasView disposes cleanly");
+            Check(Cue.ShowRunner.Kind == CueKind.CueShow && Cue.ShowRunner.Category == "CUE-SHOW", "Cue.ShowRunner category is CUE-SHOW");
+            var openWindows = WindowCaptureFeed.FindWindows();
+            Check(openWindows != null, "WindowCaptureFeed.FindWindows returns valid list");
+            var factory = new FeedFactory(null, Path.Combine(folder, "web"));
+            using (var feed = factory.Create(winCue))
+            {
+                Check(feed is WindowCaptureFeed, "FeedFactory creates WindowCaptureFeed for WindowCapture cue");
+            }
+            using (var feed = factory.Create(sceneCue))
+            {
+                Check(feed is SceneFeed, "FeedFactory creates SceneFeed for Scene cue");
+            }
+            using (var feed = factory.Create(Cue.ShowRunner))
+            {
+                Check(feed is CueShowFeed, "FeedFactory creates CueShowFeed for Cue.ShowRunner");
+            }
             var settingsPath = Path.Combine(folder, "settings.json");
             var settings = new AppSettings { OutputDevice = "display-id", SelectedAudioDevice = "audio-selected", AppliedAudioDevice = "audio-active", Protection = false, Volume = 37, Muted = true, Repeat = true, ImageFit = 2, Transition = TransitionKind.ThroughBlack, TransitionMilliseconds = 1500, AnimatePatterns = false, AutoStartOutput = true, Cues = expected, Prepared = expected[0], WebsiteDraft = "https://example.com/", TextDraft = "Bühne bereit", WindowX = -1700, WindowY = 30, WindowWidth = 1500, WindowHeight = 900, Maximized = true };
             SettingsStore.Save(settings, settingsPath);

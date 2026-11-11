@@ -5,13 +5,15 @@ using System.Text.Json.Serialization;
 
 namespace NXPresent;
 
-public enum CueKind { Image, Video, Website, Pattern, Text, Clock, Capture }
+public enum CueKind { Image, Video, Website, Pattern, Text, Clock, Capture, WindowCapture, Scene, CueShow }
 public record Cue(CueKind Kind, string Name, string Source)
 {
     /// <summary>The permanent black input of the switcher. It is not part of the library.</summary>
     public static readonly Cue Black = new(CueKind.Pattern, "Schwarz", "blackout");
-    [JsonIgnore] public string Glyph => Kind switch { CueKind.Image => "", CueKind.Video => "", CueKind.Website => "", CueKind.Pattern => "", CueKind.Clock => "", CueKind.Capture => "", _ => "" };
-    [JsonIgnore] public string Category => Kind switch { CueKind.Image => "BILD", CueKind.Video => "VIDEO", CueKind.Website => "WEBSEITE", CueKind.Pattern => "TESTBILD", CueKind.Clock => "UHR", CueKind.Capture => "VIDEOEINGANG", _ => "TEXT" };
+    /// <summary>The live show runner input of the cue page.</summary>
+    public static readonly Cue ShowRunner = new(CueKind.CueShow, "Show-Ablauf (Cue-Mode)", "cue-show-engine");
+    [JsonIgnore] public string Glyph => Kind switch { CueKind.Image => "", CueKind.Video => "", CueKind.Website => "", CueKind.Pattern => "", CueKind.Clock => "", CueKind.Capture => "", CueKind.WindowCapture => "", CueKind.Scene => "", CueKind.CueShow => "", _ => "" };
+    [JsonIgnore] public string Category => Kind switch { CueKind.Image => "BILD", CueKind.Video => "VIDEO", CueKind.Website => "WEBSEITE", CueKind.Pattern => "TESTBILD", CueKind.Clock => "UHR", CueKind.Capture => "VIDEOEINGANG", CueKind.WindowCapture => "ANWENDUNG", CueKind.Scene => "SZENE", CueKind.CueShow => "CUE-SHOW", _ => "TEXT" };
     [JsonIgnore] public string Detail => Kind is CueKind.Image or CueKind.Video ? Path.GetFileName(Source) : Kind == CueKind.Website ? Source : Category;
     public static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"];
     public static readonly string[] VideoExtensions = [".mp4", ".mkv", ".mov", ".avi", ".webm", ".m4v", ".wmv", ".mpeg", ".mpg", ".ts"];
@@ -37,5 +39,8 @@ public record Cue(CueKind Kind, string Name, string Source)
         if (cue.Kind == CueKind.Website && !TryWebsite(cue.Source, out _)) throw new InvalidDataException("Ungültige Webseitenadresse.");
         if (cue.Kind is CueKind.Image or CueKind.Video && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Der Dateipfad fehlt.");
         if (cue.Kind == CueKind.Capture && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Das Aufnahmegerät fehlt.");
+        if (cue.Kind == CueKind.WindowCapture && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Das Anwendungsfenster fehlt.");
+        if (cue.Kind == CueKind.Scene && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Die Szenen-Konfiguration fehlt.");
+        if (cue.Kind == CueKind.CueShow && string.IsNullOrWhiteSpace(cue.Source)) throw new InvalidDataException("Die Cue-Show-Quelle fehlt.");
     }
 }

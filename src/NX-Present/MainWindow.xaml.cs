@@ -77,7 +77,11 @@ public partial class MainWindow : Window
             InitializeNativeWindow();
             App.Trace("Loaded: emergency hotkey=" + hotkeyReady);
             settingsReady = true;
-            if (savedSettings.Prepared is Cue last && !closing) await switcher.SetPreviewAsync(last);
+            try
+            {
+                if (savedSettings.Prepared is Cue last && !closing) await switcher.SetPreviewAsync(last);
+            }
+            catch (Exception ex) { App.Log(ex); }
             if (!isolated && savedSettings.AutoStartOutput && savedSettings.OutputDevice != null) StartOutput(this, new RoutedEventArgs());
             else if (savedSettings.OutputDevice == null)
             {
@@ -340,8 +344,12 @@ public partial class MainWindow : Window
                 else if (KeyToDigit(e.Key) is int digit)
                 {
                     e.Handled = true;
-                    var channel = auxChannels[digit == 0 ? 9 : digit - 1];
-                    _ = SelectStandby(channel.Source.Cue, channel.Name);
+                    int index = digit == 0 ? 9 : digit - 1;
+                    if (index >= 0 && index < auxChannels.Length)
+                    {
+                        var channel = auxChannels[index];
+                        _ = SelectStandby(channel.Source.Cue, channel.Name);
+                    }
                 }
                 break;
         }
@@ -353,6 +361,12 @@ public partial class MainWindow : Window
         UpdateClock();
         switcher.Tick();
         if (closing || output == null) return;
+        if (!isolated && !Screen.AllScreens.Any(s => s.DeviceName == output.Device))
+        {
+            CloseOutput();
+            Status("Ausgabe-Bildschirm wurde getrennt. Ausgabe sicherheitshalber beendet.");
+            return;
+        }
         try { if (output.Protected) ApplyProtection(); }
         catch (Exception ex) { App.Log(ex); CloseOutput(); Status("Ausgabe aus Sicherheitsgründen freigegeben: " + ex.Message); }
     }
@@ -365,11 +379,12 @@ public partial class MainWindow : Window
 
     private void WindowClosing(object? sender, CancelEventArgs e)
     {
+        if (!ConfirmUnsaved()) { e.Cancel = true; return; }
         SaveSettings();
         settingsTimer.Stop();
         CloseOutput();
         closing = true;
-        auxSampleCancellation?.Cancel();
+        CancelAuxSampling();
         try { updateWork?.Cancel(); } catch (ObjectDisposedException) { }
         timer.Stop();
         CompositionTarget.Rendering -= OnRendering;
@@ -377,9 +392,12 @@ public partial class MainWindow : Window
         SystemEvents.SessionSwitch -= SessionChanged;
         Native.UnregisterHotKey(new WindowInteropHelper(this).Handle, EmergencyHotkey);
         hwndSource?.RemoveHook(WindowMessage);
-        Me1Monitor.Picture.Detach();
-        Me2Monitor.Picture.Detach();
+        Me1Monitor.Detach();
+        Me2Monitor.Detach();
         CueModePage.Detach();
+        switcher.Changed -= OnSwitcherChanged;
+        switcher.Message -= Status;
+        switcher.Taken -= OnTaken;
         switcher.Dispose();
         try { audio?.Dispose(); } catch (Exception ex) { App.Log(ex); MessageBox.Show(this, "Die vorherige Tonauswahl konnte nicht vollständig wiederhergestellt werden. Bitte die Windows-Tonausgabe prüfen.", "NX-Present"); }
     }

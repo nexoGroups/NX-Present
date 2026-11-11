@@ -234,6 +234,12 @@ public sealed class CueEngine : IDisposable
             return;
         }
         run.Incoming = switcher.Preview;
+        if (switcher.Preview is VideoFeed vf)
+        {
+            vf.InPointMs = cue.InPointMilliseconds;
+            vf.OutPointMs = cue.OutPointMilliseconds;
+            if (vf.InPointMs > 0) vf.Seek(vf.InPointMs);
+        }
         run.ActionStart = clock();
         run.Stage = Stage.Acting;
         if (!switcher.Auto(cue.Transition, cue.DurationMilliseconds))
@@ -345,13 +351,40 @@ public sealed class CueEngine : IDisposable
     private void Preload()
     {
         if (takeOwner != null || switcher.IsTransitioning) return;
-        Cue? wanted = runs.FirstOrDefault(x => x.Cue.Type == RunCueType.Source && x.Stage is Stage.PreWait or Stage.Waiting)?.Cue.Cue;
-        if (wanted == null && PreloadEnabled && rundown.Next is { Type: RunCueType.Source } playhead) wanted = playhead.Cue;
-        if (wanted != null && switcher.PreviewCue != wanted) _ = PreloadAsync(wanted);
+        RunCue? targetCue = runs.FirstOrDefault(x => x.Cue.Type == RunCueType.Source && x.Stage is Stage.PreWait or Stage.Waiting)?.Cue;
+        if (targetCue == null && PreloadEnabled && rundown.Next is { Type: RunCueType.Source } playhead) targetCue = playhead;
+        Cue? wanted = targetCue?.Cue;
+        if (wanted != null)
+        {
+            if (switcher.PreviewCue != wanted)
+            {
+                _ = PreloadAsync(wanted, targetCue);
+            }
+            else if (switcher.Preview is VideoFeed vf && targetCue != null)
+            {
+                if (vf.InPointMs != targetCue.InPointMilliseconds || vf.OutPointMs != targetCue.OutPointMilliseconds)
+                {
+                    vf.InPointMs = targetCue.InPointMilliseconds;
+                    vf.OutPointMs = targetCue.OutPointMilliseconds;
+                    vf.Seek(vf.InPointMs);
+                }
+            }
+        }
     }
-    private async Task PreloadAsync(Cue cue)
+    private async Task PreloadAsync(Cue cue, RunCue? runCue)
     {
-        try { await switcher.SetPreviewAsync(cue); }
+        try
+        {
+            if (await switcher.SetPreviewAsync(cue))
+            {
+                if (switcher.Preview is VideoFeed vf && runCue != null)
+                {
+                    vf.InPointMs = runCue.InPointMilliseconds;
+                    vf.OutPointMs = runCue.OutPointMilliseconds;
+                    if (vf.InPointMs > 0) vf.Seek(vf.InPointMs);
+                }
+            }
+        }
         catch (Exception ex) { App.Log(ex); }
     }
 

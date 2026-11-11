@@ -9,6 +9,10 @@ Eine Veröffentlichung auf GitHub ist hier mehr als ein Download: NX-Present suc
 
 Wünscht der Nutzer nur einen Teil (nur README, nur Changelog, nur Setup bauen), erledige genau diesen Teil und höre dort auf.
 
+## Vorabversionen
+
+Für Beta gilt der Ablauf für Vorabversionen in `docs/ENTWICKLUNG.md`. Verwende `release/vX.Y.Z-beta.N`, den gleichnamigen Tag ohne Branch-Präfix und ein eigenes Ausgabeverzeichnis. Prüfe dort die Beta-Dateien mit `Prepare-Assets.ps1`. Lege den Entwurf mit `--prerelease` an und veröffentliche ihn mit `--draft=false --latest=false`. Die nachfolgenden Angaben zu `main`, `releases.win.json` und `--latest` gelten für Stable.
+
 ## 0. Ausgangslage klären
 
 - Git, .NET und `vpk` liegen auf dem PC des Nutzers oft nicht im PATH der Shell. Suche sie, bevor du sie für fehlend hältst: `C:\Program Files\Git\cmd\git.exe`, `C:\Program Files\dotnet\dotnet.exe`, `%USERPROFILE%\.dotnet\tools\vpk.exe`. Was wirklich fehlt, darfst du nur nach ausdrücklichem Ja des Nutzers installieren (`winget install --id Git.Git`, `winget install --id GitHub.cli`, `dotnet tool install -g vpk --version <Version des Pakets Velopack in NX-Present.csproj>`).

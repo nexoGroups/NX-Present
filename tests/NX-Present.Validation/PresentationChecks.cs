@@ -46,6 +46,18 @@ static class PresentationChecks
 
     static async Task CheckControls(Action<bool, string> check, string folder, string[] args)
     {
+        var scene = SceneModel.CreatePreShowTemplate();
+        var editor = new SceneEditorWindow(scene, preselectedAuxChannel: 2);
+        try
+        {
+            var target = (ComboBox)editor.FindName("TargetChannelPicker");
+            check(editor.ResultModel == scene && target.SelectedIndex == 2, "The scene editor opens the selected AUX scene");
+            var templates = (ComboBox)editor.FindName("TemplatePicker");
+            templates.SelectedIndex = 3;
+            check(editor.ResultModel.Items.Count > 0 && editor.ResultModel != scene, "The scene editor loads another template");
+        }
+        finally { editor.Close(); }
+
         await MixerChecks.Run(check, folder, args);
         await CueEngineChecks.Run(check);
         if (args.Contains("--web-race")) { await MediaChecks.WebRace(check, folder); return; }
@@ -292,8 +304,14 @@ static class PresentationChecks
             await Task.Delay(300);
             var mixer = window.Mixer;
             check(mixer.Volume == 60 && mixer.DurationMilliseconds == 1000 && mixer.Style == TransitionKind.Dissolve && !mixer.AnimatePatterns, "Saved settings reach the switcher");
-            var cards = Descendants(window).OfType<Button>().Where(b => b.DataContext is BusKey && b.Style == (Style)window.FindResource("PoolCard")).ToList();
+            var poolPage = (FrameworkElement)window.FindName("PoolPage");
+            check(!poolPage.IsVisible, "The media pool is completely hidden in normal mixer mode");
+            ((RadioButton)window.FindName("PoolNav")).IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+            var cards = Descendants(poolPage).OfType<Button>().Where(b => b.DataContext is BusKey && b.Style == (Style)window.FindResource("PoolCard")).ToList();
             check(cards.Count == pool.Count, $"The media pool shows one card per source ({cards.Count})");
+            ((RadioButton)window.FindName("MixerNav")).IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
             var tiles = Descendants((DependencyObject)window.FindName("AuxTiles")).OfType<Button>().Where(b => b.DataContext is AuxChannel).ToList();
             check(tiles.Count == 10 && ((AuxChannel)tiles[9].DataContext).Name == "AUX 10", "The mixer shows ten numbered AUX tiles");
             check(tiles.All(tile => ((AuxChannel)tile.DataContext).Source.HasThumbnail), "Every assigned test, still and black input has a thumbnail");
@@ -316,11 +334,16 @@ static class PresentationChecks
 
             ((RadioButton)window.FindName("AuxNav")).IsChecked = true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
-            var patchers = Descendants((DependencyObject)window.FindName("AuxRoutes")).OfType<ComboBox>().Where(box => box.DataContext is AuxChannel).ToList();
-            check(patchers.Count == 10 && patchers[0].SelectedItem is BusKey { Cue: var firstCue } && firstCue == pool[0], "The patcher shows all ten saved routes");
-            check(((AuxChannel)patchers[0].DataContext).Choices.Any(key => key.Cue == Cue.Black), "The patcher offers the permanent black source");
-            patchers[0].SelectedItem = patchers[0].Items.OfType<BusKey>().First(key => key.Cue == pool[3]);
+            var auxOutputs = Descendants((DependencyObject)window.FindName("AuxOutputs")).OfType<Button>().Where(box => box.DataContext is AuxChannel).ToList();
+            check(auxOutputs.Count == 10 && ((AuxChannel)auxOutputs[0].DataContext).Source.Cue == pool[0], "The patcher shows all ten saved routes");
+            var auxSources = Descendants((DependencyObject)window.FindName("AuxSources")).OfType<Button>().Where(b => b.DataContext is BusKey).ToList();
+            check(auxSources.Any(key => ((BusKey)key.DataContext).Cue == Cue.Black), "The patcher offers the permanent black source");
+            check(((AuxChannel)auxOutputs[0].DataContext).IsSelected, "The first AUX channel is selected for routing by default");
+            check(auxSources.First(b => ((BusKey)b.DataContext).Cue == pool[0]).DataContext is BusKey { IsRouted: true }, "The currently assigned source is visually recognized as routed");
+            var targetSourceTile = auxSources.First(b => ((BusKey)b.DataContext).Cue == pool[3]);
+            targetSourceTile.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             check(((AuxChannel)tiles[0].DataContext).Source.Cue == pool[3] && mixer.Program.Cue == pool[0], "Repatching updates the tile and does not change projection");
+            check(((BusKey)targetSourceTile.DataContext).IsRouted, "The newly assigned source is marked as routed");
             SavePng(Capture(window, 1600, 960), Path.Combine(folder, "aux-ui.png"));
             ((RadioButton)window.FindName("MixerNav")).IsChecked = true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
@@ -380,11 +403,11 @@ static class PresentationChecks
             check(bar2.ActualWidth >= 150 && cut.ActualWidth > 90 && auto.ActualWidth > 90, $"At the minimum size the T-bar keeps room ({bar2.ActualWidth:0} px) and CUT / AUTO stay whole");
             check(me1.Picture.ActualWidth >= 250 && me1.Picture.ActualHeight >= 140, $"At the minimum size the ME monitors are still usable ({me1.Picture.ActualWidth:0} x {me1.Picture.ActualHeight:0})");
             var tileRow = (FrameworkElement)window.FindName("AuxTiles");
-            var poolItems = (FrameworkElement)window.FindName("PoolItems");
             check(tiles.All(tile => tile.IsVisible && tile.ActualWidth >= 60)
-                && tiles.Zip(tiles.Skip(1)).All(pair => pair.Second.TranslatePoint(new Point(), pair.First).X >= pair.First.ActualWidth + 4)
-                && tileRow.TranslatePoint(new Point(0, tileRow.ActualHeight), poolItems).Y < 0,
+                && tiles.Zip(tiles.Skip(1)).All(pair => pair.Second.TranslatePoint(new Point(), pair.First).X >= pair.First.ActualWidth + 4),
                 "At minimum size all ten AUX tiles fit side by side above the media pool");
+            check(!((FrameworkElement)window.FindName("PoolPage")).IsVisible,
+                "The media pool remains completely hidden in normal mixer mode");
             SavePng(Capture(window, 1180, 740), Path.Combine(folder, "mixer-ui-small.png"));
             var mixerOptions = (ScrollViewer)window.FindName("InspectorPanel");
             var options = (ToggleButton)window.FindName("InspectorToggle");
@@ -429,6 +452,10 @@ static class PresentationChecks
 
             // Other pages.
             window.Mixer.Volume = 40;
+            var poolNav = (RadioButton)window.FindName("PoolNav");
+            poolNav.IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+            SavePng(Capture(window, 1600, 960), Path.Combine(folder, "pool-ui.png"));
             var cueNav = (RadioButton)window.FindName("CueModeNav");
             cueNav.IsChecked = true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();

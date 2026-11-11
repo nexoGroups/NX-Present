@@ -19,6 +19,7 @@ public partial class MonitorView : UserControl
     {
         InitializeComponent();
         ApplyMode();
+        SeekBar.LostMouseCapture += (_, _) => seeking = false;
         timer.Tick += (_, _) => Tick();
         Loaded += (_, _) => { timer.Start(); Refresh(); };
         Unloaded += (_, _) => timer.Stop();
@@ -37,6 +38,13 @@ public partial class MonitorView : UserControl
         Surface.Attach(target);
         target.Changed += OnChanged;
         Refresh();
+    }
+
+    public void Detach()
+    {
+        if (switcher != null) switcher.Changed -= OnChanged;
+        switcher = null;
+        Surface.Detach();
     }
 
     private void ApplyMode()
@@ -122,7 +130,8 @@ public partial class MonitorView : UserControl
     private void SeekStarted(object sender, MouseButtonEventArgs e) => seeking = true;
     private void SeekFinished(object sender, MouseButtonEventArgs e)
     {
-        (CurrentFeed() as ITransportFeed)?.Seek((long)SeekBar.Value);
+        if (!seeking) return;
         seeking = false;
+        (CurrentFeed() as ITransportFeed)?.Seek((long)SeekBar.Value);
     }
 }

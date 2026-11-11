@@ -116,7 +116,11 @@ public sealed class Switcher : IDisposable
         if (IsTransitioning) { Notify("Während eines Übergangs kann die Quelle nicht gewechselt werden."); return Task.FromResult(false); }
         if (previewTask != null && previewLoading && previewCue == cue) return previewTask;
         if (preview != null && !previewLoading && preview.Cue == cue && preview.State == FeedState.Ready) return Task.FromResult(true);
-        previewLoad?.Cancel();
+        if (previewLoad != null)
+        {
+            previewLoad.Cancel();
+            previewLoad.Dispose();
+        }
         var cancellation = previewLoad = new CancellationTokenSource();
         int token = ++previewToken;
         var old = preview;
@@ -261,7 +265,8 @@ public sealed class Switcher : IDisposable
 
     private void Complete(SwitcherChange extra = SwitcherChange.None)
     {
-        var incoming = preview!;
+        if (preview == null) return;
+        var incoming = preview;
         var outgoing = program;
         autoRunning = false;
         manualActive = false;
@@ -334,10 +339,17 @@ public sealed class Switcher : IDisposable
     {
         if (disposed) return;
         disposed = true;
-        previewLoad?.Cancel();
+        if (previewLoad != null)
+        {
+            try { previewLoad.Cancel(); previewLoad.Dispose(); } catch { }
+            previewLoad = null;
+        }
         program.StateChanged -= FeedStateChanged;
         program.Dispose();
         if (preview != null) { preview.StateChanged -= FeedStateChanged; preview.Dispose(); }
         preview = null;
+        Changed = null;
+        Message = null;
+        Taken = null;
     }
 }

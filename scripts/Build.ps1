@@ -8,7 +8,7 @@ param(
     [switch]$SkipValidation,
     [string]$DotNet = 'dotnet',
     # Set a separate directory to keep assets from an earlier build out of this release.
-    [string]$ReleaseDirectory = 'artifacts/release'
+    [string]$ReleaseDirectory
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -23,9 +23,22 @@ try {
     }
     [xml]$project = Get-Content -LiteralPath 'src/NX-Present/NX-Present.csproj'
     $version = [string]$project.Project.PropertyGroup.Version
+    if ($version -cnotmatch '^\d{1,4}\.\d{1,4}\.\d{1,4}(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?$') {
+        throw "Unsupported release version: $version"
+    }
+    $prerelease = $version.Contains('-')
+    $channel = if ($prerelease) { 'beta' } else { 'win' }
+    $packageVersion = if ($prerelease) { "$version-$channel" } else { $version }
+    if (-not $ReleaseDirectory) {
+        $ReleaseDirectory = if ($prerelease) { "artifacts/release-$version" } else { 'artifacts/release' }
+    }
     $buildId = Get-Date -Format 'yyyyMMdd-HHmmss'
     $appDir = Join-Path $root "artifacts/publish/$version/$buildId"
     $releaseDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ReleaseDirectory)
+    $otherChannel = if ($prerelease) { 'win' } else { 'beta' }
+    if ($Installer -and (Test-Path -LiteralPath (Join-Path $releaseDir "releases.$otherChannel.json"))) {
+        throw "Choose a separate output directory for channel '$channel'."
+    }
     New-Item -ItemType Directory -Path $appDir,$releaseDir -Force | Out-Null
     Invoke-DotNet -Arguments @('restore','src/NX-Present/NX-Present.csproj','--locked-mode')
     Invoke-DotNet -Arguments @('build','src/NX-Present/NX-Present.csproj','-c','Release','--no-restore')
@@ -55,13 +68,15 @@ try {
 
         # The release notes are the section of this version in CHANGELOG.md (also shown in the update feed).
         $changelog = [IO.File]::ReadAllText((Join-Path $root 'CHANGELOG.md'), [Text.Encoding]::UTF8)
-        $section = [regex]::Match($changelog, '(?ms)^## ' + [regex]::Escape($version) + '[^\r\n]*\r?\n(.*?)(?=^## |\z)')
+        $section = [regex]::Match($changelog, '(?ms)^## ' + [regex]::Escape($version) + '(?=[ \t\r\n])[^\r\n]*\r?\n(.*?)(?=^## |\z)')
         if (-not $section.Success) { throw "CHANGELOG.md has no section '## $version'." }
         $notes = Join-Path $root 'artifacts/release-notes.md'
         [IO.File]::WriteAllText($notes, $section.Groups[1].Value.Trim() + "`n", (New-Object System.Text.UTF8Encoding($false)))
 
         # Earlier releases let Velopack build small delta packages. The first Velopack release has none, so failing here is fine.
-        & vpk download github --repoUrl $repoUrl --outputDir $releaseDir
+        $downloadArguments = @('download', 'github', '--repoUrl', $repoUrl, '--channel', $channel, '--outputDir', $releaseDir)
+        if ($prerelease) { $downloadArguments += '--pre' }
+        & vpk @downloadArguments
         if ($LASTEXITCODE -ne 0) { Write-Host 'No earlier Velopack release found; building full packages only.' }
         $global:LASTEXITCODE = 0
         $older = @(Get-ChildItem -LiteralPath $releaseDir -Filter '*.nupkg' -File)
@@ -72,6 +87,7 @@ try {
             'pack',
             '--packId', $packId,
             '--packVersion', $version,
+            '--channel', $channel,
             '--runtime', 'win-x64',
             '--packDir', $appDir,
             '--mainExe', $mainExe,
@@ -88,9 +104,10 @@ try {
         # Downloaded older packages only served the delta calculation. They are not part of the new release.
         foreach ($file in $older) { if ($file.LastWriteTime -lt $started) { Remove-Item -LiteralPath $file.FullName -Force } }
 
-        $setup = Join-Path $releaseDir "$packId-win-Setup.exe"
-        $portable = Join-Path $releaseDir "$packId-win-Portable.zip"
-        foreach ($required in @($setup, $portable, (Join-Path $releaseDir "$packId-$version-full.nupkg"), (Join-Path $releaseDir 'releases.win.json'))) {
+        $setup = Join-Path $releaseDir "$packId-$channel-Setup.exe"
+        $portable = Join-Path $releaseDir "$packId-$channel-Portable.zip"
+        $feed = Join-Path $releaseDir "releases.$channel.json"
+        foreach ($required in @($setup, $portable, (Join-Path $releaseDir "$packId-$packageVersion-full.nupkg"), $feed)) {
             if (-not (Test-Path -LiteralPath $required)) { throw "vpk did not produce $required" }
         }
         $sums = foreach ($file in @($setup, $portable)) { (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($file) }

@@ -19,14 +19,21 @@ public static class ShowFile
             Cue.Validate(cue);
             list.Add(Relative(cue, folder)!);
         }
-        string temp = path + ".tmp";
         var steps = new List<RunCueData>(rundown ?? []);
         CueRundown.Validate(steps);
         var relativeSteps = steps.ConvertAll(step => step with { Cue = Relative(step.Cue, folder) });
         AuxRouting.Validate(auxSources);
         var relativeAux = auxSources == null ? null : new List<Cue>(auxSources).ConvertAll(cue => Relative(cue, folder)!);
-        File.WriteAllText(temp, JsonSerializer.Serialize(new ShowDocument(relativeAux != null ? 4 : steps.Count > 0 ? 3 : 1, list, relativeSteps, relativeAux), new JsonSerializerOptions { WriteIndented = true }));
-        File.Move(temp, path, true);
+        string temp = Path.Combine(folder, "." + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            File.WriteAllText(temp, JsonSerializer.Serialize(new ShowDocument(relativeAux != null ? 4 : steps.Count > 0 ? 3 : 1, list, relativeSteps, relativeAux), new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(temp, path, true);
+        }
+        finally
+        {
+            try { if (File.Exists(temp)) File.Delete(temp); } catch { }
+        }
     }
     public static List<Cue> Load(string path) => LoadDocument(path).Cues;
     public static ShowDocument LoadDocument(string path)
@@ -49,6 +56,20 @@ public static class ShowFile
     }
 
     // Media are linked by a path relative to the show, so a show and its media can move together.
-    private static Cue? Relative(Cue? cue, string folder) => cue is { Kind: CueKind.Image or CueKind.Video } ? cue with { Source = Path.GetRelativePath(folder, cue.Source) } : cue;
-    private static Cue? Absolute(Cue? cue, string folder) => cue is { Kind: CueKind.Image or CueKind.Video } ? cue with { Source = Path.GetFullPath(cue.Source, folder) } : cue;
+    private static Cue? Relative(Cue? cue, string folder)
+    {
+        if (cue is not { Kind: CueKind.Image or CueKind.Video }) return cue;
+        try
+        {
+            string fullSource = Path.IsPathRooted(cue.Source) ? cue.Source : Path.GetFullPath(cue.Source, folder);
+            return cue with { Source = Path.GetRelativePath(folder, fullSource) };
+        }
+        catch { return cue; }
+    }
+    private static Cue? Absolute(Cue? cue, string folder)
+    {
+        if (cue is not { Kind: CueKind.Image or CueKind.Video }) return cue;
+        try { return cue with { Source = Path.GetFullPath(cue.Source, folder) }; }
+        catch { return cue; }
+    }
 }

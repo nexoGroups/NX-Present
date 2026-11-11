@@ -48,7 +48,7 @@ Das eignet sich für private Präsentationen, Hobbyprojekte und ehrenamtliche Ve
 - **CUT und AUTO:** Sofortschnitt oder automatischer Übergang mit einstellbarer Dauer. Ein Video startet erst mit der Blende, sein Ton blendet mit.
 - **Überblender:** Von Hand mischen. Drückst du AUTO bei halb gezogenem Überblender, läuft der Rest der Blende automatisch.
 - **FTB und Schwarz + stumm:** Weich nach Schwarz samt Ton, oder sofort schwarz und stumm. Beide ME-Monitore zeigen weiterhin ihre Quellen.
-- **AUX-Patcher:** Zehn interne Kanäle mit Standbildern für Medienpool-Quellen, Schwarz und von Windows erkannte Videoeingänge. HDMI benötigt eine Capture-Karte. Kamera und HDMI liefern Bild.
+- **AUX-Patcher:** Wähle einen der zehn AUX-Kanäle als Ziel und weise ihm eine Quelle zu. Die Kacheln zeigen eine Vorschau. HDMI benötigt eine Capture-Karte.
 
 ### Sechs Übergänge
 
@@ -71,8 +71,10 @@ Das eignet sich für private Präsentationen, Hobbyprojekte und ehrenamtliche Ve
 | Text | Texttafeln |
 | Uhr | Die Uhrzeit als Bildquelle |
 | Testbilder | Animierte Prüfbilder, die sich auch als Bewegungstest eignen |
+| Anwendungsfenster | Ein geöffnetes Windows-Fenster als Bildquelle |
+| Szenen | Ebenen für Bilder, Text, Countdown, Uhr, Song-Anzeige und Audio-Visualizer |
 
-Der Pool zeigt Vorschaubilder und bietet Suche und Filter. Dateien lassen sich hineinziehen.
+Unter **Medienpool** findest du Vorschaubilder, Suche und Filter. Dateien lassen sich hineinziehen. Im Szeneneditor kannst du Vorlagen anpassen und die fertige Szene im Medienpool ablegen oder einem AUX-Kanal zuweisen.
 
 ### Geplante Abläufe
 
@@ -89,6 +91,8 @@ Der **Cue Mode** ist für Veranstaltungen mit fester Reihenfolge und eine Cue-Li
 ### Updates
 
 NX-Present sucht beim Start im Hintergrund auf der offiziellen GitHub-Veröffentlichungsseite nach einer neueren Version und installiert sie selbst, solange nichts live ist. Läuft schon Inhalt, wartet das Update: Die Statusleiste zeigt **UPDATE x.y.z**, und du startest es unter **Setup → Updates** mit **Jetzt aktualisieren**. Dort lässt sich die Suche beim Start und die automatische Installation auch ausschalten, und **Nach Updates suchen** prüft von Hand. Einstellungen, Pool und Cue-Liste bleiben beim Update erhalten.
+
+**Beta testen:** Unter [Veröffentlichungen](https://github.com/nexoGroups/NX-Present/releases) findest du das separat gekennzeichnete **NXPresent-beta-Setup.exe**. Mit der Installation wechselst du in den Beta-Kanal. Die Stable-Installation bezieht reguläre Updates über ihren eigenen Kanal.
 
 ## Installieren
 

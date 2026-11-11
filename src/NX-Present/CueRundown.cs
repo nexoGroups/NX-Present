@@ -23,7 +23,8 @@ public enum CuePhase { Idle, PreWait, Queued, Running, PostWait, Failed }
 /// </summary>
 public sealed record RunCueData(Guid Id, Cue? Cue, string Label = "", string Notes = "", TransitionKind Transition = TransitionKind.Dissolve, int DurationMilliseconds = 500,
     RunCueType Type = RunCueType.Source, string Number = "", int PreWaitMilliseconds = 0, int PostWaitMilliseconds = 0, ContinueMode Continue = ContinueMode.None,
-    bool Armed = true, CueColor Color = CueColor.None, CueAction Action = CueAction.None, int Level = 0, string Hotkey = "");
+    bool Armed = true, CueColor Color = CueColor.None, CueAction Action = CueAction.None, int Level = 0, string Hotkey = "",
+    int InPointMilliseconds = 0, int OutPointMilliseconds = 0);
 
 /// <summary>One cue of the rundown: what it does, when it does it and, while the engine runs it, how far it is.</summary>
 public sealed class RunCue : INotifyPropertyChanged
@@ -31,11 +32,12 @@ public sealed class RunCue : INotifyPropertyChanged
     private static readonly string[] Derived =
     [
         nameof(DisplayName), nameof(DefaultName), nameof(Subtitle), nameof(PreText), nameof(DurationText), nameof(PostText), nameof(ContinueGlyph), nameof(ContinueLabel), nameof(ContinueHint),
-        nameof(UsesDuration), nameof(MinDuration), nameof(MaxDuration), nameof(ColorBrush), nameof(Glyph), nameof(StatusGlyph), nameof(StatusBrush), nameof(Tip), nameof(Problem)
+        nameof(UsesDuration), nameof(MinDuration), nameof(MaxDuration), nameof(ColorBrush), nameof(Glyph), nameof(StatusGlyph), nameof(StatusBrush), nameof(Tip), nameof(Problem),
+        nameof(InPointText), nameof(OutPointText)
     ];
     private string label, notes, number, hotkey;
     private TransitionKind transition;
-    private int duration, preWait, postWait, level;
+    private int duration, preWait, postWait, level, inPoint, outPoint;
     private ContinueMode continueMode;
     private bool armed, live, next;
     private CueColor color;
@@ -56,9 +58,11 @@ public sealed class RunCue : INotifyPropertyChanged
         duration = Math.Clamp(data.DurationMilliseconds, MinDuration, MaxDuration);
         preWait = Math.Clamp(data.PreWaitMilliseconds, 0, CueTime.Max);
         postWait = Math.Clamp(data.PostWaitMilliseconds, 0, CueTime.Max);
+        inPoint = Math.Max(0, data.InPointMilliseconds);
+        outPoint = Math.Max(0, data.OutPointMilliseconds);
         CheckTarget();
     }
-    public RunCueData Snapshot() => new(Id, target, label, notes, transition, duration, Type, number, preWait, postWait, continueMode, armed, color, action, level, hotkey);
+    public RunCueData Snapshot() => new(Id, target, label, notes, transition, duration, Type, number, preWait, postWait, continueMode, armed, color, action, level, hotkey, inPoint, outPoint);
 
     // ---- what is stored ----
     /// <summary>The source of a Source cue. It can be retargeted, never emptied.</summary>
@@ -79,6 +83,10 @@ public sealed class RunCue : INotifyPropertyChanged
     public CueAction Action { get => action; set => Set(ref action, Enum.IsDefined(value) ? value : CueAction.None); }
     /// <summary>Target of a volume cue in percent.</summary>
     public int Level { get => level; set => Set(ref level, Math.Clamp(value, 0, 100)); }
+    public int InPointMilliseconds { get => inPoint; set { if (Set(ref inPoint, Math.Max(0, value))) CheckTarget(); } }
+    public int OutPointMilliseconds { get => outPoint; set { if (Set(ref outPoint, Math.Max(0, value))) CheckTarget(); } }
+    public string InPointText => inPoint == 0 ? "00:00" : CueTime.Format(inPoint);
+    public string OutPointText => outPoint == 0 ? "Ende" : CueTime.Format(outPoint);
 
     // ---- how it is shown ----
     public int MinDuration => Type == RunCueType.Source ? 100 : 0;
@@ -176,10 +184,18 @@ public sealed class RunCue : INotifyPropertyChanged
         failure = text;
         Changed(nameof(Problem)); Changed(nameof(Tip)); Changed(nameof(StatusGlyph)); Changed(nameof(StatusBrush));
     }
-    /// <summary>Looks for a missing media file. Done when a cue is loaded or retargeted, never while it runs.</summary>
+    /// <summary>Looks for a missing media file or invalid trim settings. Done when a cue is loaded or retargeted, never while it runs.</summary>
     internal void CheckTarget()
     {
-        string? found = Type == RunCueType.Source && target is { Kind: CueKind.Image or CueKind.Video } file && !File.Exists(file.Source) ? "Die Datei fehlt: " + file.Source : null;
+        string? found = null;
+        if (Type == RunCueType.Source && target is { Kind: CueKind.Image or CueKind.Video } file && !File.Exists(file.Source))
+        {
+            found = "Die Datei fehlt: " + file.Source;
+        }
+        else if (Type == RunCueType.Source && target is { Kind: CueKind.Video } && outPoint > 0 && inPoint >= outPoint)
+        {
+            found = "In-Point liegt hinter oder auf dem Out-Point (" + InPointText + " >= " + OutPointText + ")";
+        }
         if (found == problem) return;
         problem = found;
         Changed(nameof(Problem)); Changed(nameof(Tip)); Changed(nameof(StatusGlyph)); Changed(nameof(StatusBrush));
@@ -206,7 +222,8 @@ public sealed class CueRundown : INotifyPropertyChanged
     private static readonly HashSet<string> Stored =
     [
         nameof(RunCue.Cue), nameof(RunCue.Label), nameof(RunCue.Notes), nameof(RunCue.Number), nameof(RunCue.Hotkey), nameof(RunCue.Transition), nameof(RunCue.DurationMilliseconds),
-        nameof(RunCue.PreWaitMilliseconds), nameof(RunCue.PostWaitMilliseconds), nameof(RunCue.Continue), nameof(RunCue.Armed), nameof(RunCue.Color), nameof(RunCue.Action), nameof(RunCue.Level)
+        nameof(RunCue.PreWaitMilliseconds), nameof(RunCue.PostWaitMilliseconds), nameof(RunCue.Continue), nameof(RunCue.Armed), nameof(RunCue.Color), nameof(RunCue.Action), nameof(RunCue.Level),
+        nameof(RunCue.InPointMilliseconds), nameof(RunCue.OutPointMilliseconds)
     ];
     private readonly ObservableCollection<RunCue> items = new();
     private RunCue? next, live;

@@ -1,5 +1,11 @@
 # Releaseprüfung
 
+## 0.7.0-beta.1
+
+- Die Standardvalidierung prüft unter anderem das Öffnen des Szeneneditors, den Vorlagenwechsel, die neuen Quelltypen, die Video-Schnittmarken und die getrennte Versionsauswahl für Stable und Beta.
+- Die Ausgabe am Beamer, echte HDMI-Signale und das Verhalten unter Smart App Control wurden für diese Beta nicht an Hardware geprüft. Das Setup wird ohne eigene Code-Signatur gebaut.
+- Für den ersten Beta-Release gibt es keine veröffentlichte Beta-Vorversion für einen Update-Test.
+
 ## 0.6.0
 
 - Release-Build ohne Compilerwarnungen oder Fehler. Alle 424 Prüfungen mit echter Video-Engine und WebView2 bestanden.

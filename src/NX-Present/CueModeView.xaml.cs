@@ -68,8 +68,8 @@ public partial class CueModeView : UserControl
         if (switcher != null) switcher.Changed -= OnSwitcherChanged;
         switcher = null;
         if (Engine != null) { Engine.Message -= Notify; Engine.StateChanged -= Refresh; Engine.Dispose(); Engine = null; }
-        NextMonitor.Picture.Detach();
-        LiveMonitor.Picture.Detach();
+        NextMonitor.Detach();
+        LiveMonitor.Detach();
     }
     public void SetFit(Stretch fit)
     {
@@ -78,7 +78,7 @@ public partial class CueModeView : UserControl
     }
     public void SetSources(IList sources)
     {
-        sourceView = new ListCollectionView(sources) { Filter = value => value is Cue cue && (string.IsNullOrWhiteSpace(SourceSearch.Text) || cue.Name.Contains(SourceSearch.Text.Trim(), StringComparison.CurrentCultureIgnoreCase) || cue.Category.Contains(SourceSearch.Text.Trim(), StringComparison.CurrentCultureIgnoreCase)) };
+        sourceView = new ListCollectionView(sources) { Filter = value => value is Cue cue && (string.IsNullOrWhiteSpace(SourceSearch.Text) || (cue.Name?.Contains(SourceSearch.Text.Trim(), StringComparison.CurrentCultureIgnoreCase) == true) || (cue.Category?.Contains(SourceSearch.Text.Trim(), StringComparison.CurrentCultureIgnoreCase) == true)) };
         SourceList.ItemsSource = sourceView;
         TargetPicker.ItemsSource = sources;
     }
@@ -234,13 +234,19 @@ public partial class CueModeView : UserControl
             NumberBox.Text = edited?.Number ?? "";
             foreach (RadioButton swatch in SwatchPanel.Children) swatch.IsChecked = edited != null && (CueColor)swatch.Tag == edited.Color;
             string key = edited?.Hotkey ?? "";
-            HotkeyPicker.SelectedItem = HotkeyPicker.Items.Cast<ComboBoxItem>().First(x => (string)x.Tag == key);
+            HotkeyPicker.SelectedItem = HotkeyPicker.Items.Cast<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == key) ?? HotkeyPicker.Items[0];
+            if (VideoTrimPanel != null)
+            {
+                VideoTrimPanel.Visibility = edited?.Cue?.Kind == CueKind.Video ? Visibility.Visible : Visibility.Collapsed;
+                InPointBox.Text = edited?.InPointText ?? "00:00";
+                OutPointBox.Text = edited?.OutPointText ?? "Ende";
+            }
         }
         finally { syncing = false; }
     }
     private void EditedChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (!syncing && e.PropertyName is nameof(RunCue.Number) or nameof(RunCue.Color) or nameof(RunCue.Hotkey)) SyncEditor();
+        if (!syncing && e.PropertyName is nameof(RunCue.Number) or nameof(RunCue.Color) or nameof(RunCue.Hotkey) or nameof(RunCue.Cue) or nameof(RunCue.InPointMilliseconds) or nameof(RunCue.OutPointMilliseconds)) SyncEditor();
     }
 
     private void NumberCommitted(object sender, RoutedEventArgs e) => CommitNumber();
@@ -281,5 +287,80 @@ public partial class CueModeView : UserControl
         if (Rundown.TrySetHotkey(edited, hotkey, out string error)) return;
         Notify(error);
         Dispatcher.BeginInvoke(SyncEditor);
+    }
+
+    private void SetInPointFromCurrent(object sender, RoutedEventArgs e)
+    {
+        if (edited == null) return;
+        var feed = (switcher?.Preview as VideoFeed) ?? (switcher?.Program as VideoFeed);
+        if (feed != null)
+        {
+            edited.InPointMilliseconds = (int)Math.Max(0, feed.Time);
+            InPointBox.Text = edited.InPointText;
+            Notify($"In-Punkt gesetzt auf {edited.InPointText}");
+        }
+        else
+        {
+            Notify("Kein aktives Video im Vorschau- oder Programm-Monitor gefunden.");
+        }
+    }
+
+    private void SetOutPointFromCurrent(object sender, RoutedEventArgs e)
+    {
+        if (edited == null) return;
+        var feed = (switcher?.Preview as VideoFeed) ?? (switcher?.Program as VideoFeed);
+        if (feed != null)
+        {
+            edited.OutPointMilliseconds = (int)Math.Max(0, feed.Time);
+            OutPointBox.Text = edited.OutPointText;
+            Notify($"Out-Punkt gesetzt auf {edited.OutPointText}");
+        }
+        else
+        {
+            Notify("Kein aktives Video im Vorschau- oder Programm-Monitor gefunden.");
+        }
+    }
+
+    private void ResetVideoTrim(object sender, RoutedEventArgs e)
+    {
+        if (edited == null) return;
+        edited.InPointMilliseconds = 0;
+        edited.OutPointMilliseconds = 0;
+        InPointBox.Text = "00:00";
+        OutPointBox.Text = "Ende";
+        Notify("Schnittmarken zurückgesetzt.");
+    }
+
+    private void InPointCommitted(object sender, RoutedEventArgs e) => CommitInPoint();
+    private void InPointKeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Enter) { e.Handled = true; CommitInPoint(); } }
+    private void CommitInPoint()
+    {
+        if (edited == null) return;
+        if (CueTime.TryParse(InPointBox.Text, out int ms))
+        {
+            edited.InPointMilliseconds = ms;
+            if (ms > 0 && edited.OutPointMilliseconds > 0 && ms >= edited.OutPointMilliseconds)
+            {
+                Notify($"Hinweis: In-Punkt ({CueTime.Format(ms)}) liegt hinter oder auf dem Out-Punkt ({edited.OutPointText}).");
+            }
+        }
+        InPointBox.Text = edited.InPointText;
+    }
+
+    private void OutPointCommitted(object sender, RoutedEventArgs e) => CommitOutPoint();
+    private void OutPointKeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Enter) { e.Handled = true; CommitOutPoint(); } }
+    private void CommitOutPoint()
+    {
+        if (edited == null) return;
+        if (CueTime.TryParse(OutPointBox.Text, out int ms))
+        {
+            edited.OutPointMilliseconds = ms;
+            if (ms > 0 && ms <= edited.InPointMilliseconds)
+            {
+                Notify($"Hinweis: Out-Punkt ({CueTime.Format(ms)}) liegt vor oder auf dem In-Punkt ({edited.InPointText}).");
+            }
+        }
+        else if (OutPointBox.Text.Trim().ToLowerInvariant() is "ende" or "0" or "") edited.OutPointMilliseconds = 0;
+        OutPointBox.Text = edited.OutPointText;
     }
 }

@@ -8,11 +8,22 @@ public partial class MainWindow
     private void InitializeCueMode()
     {
         CueModePage.Attach(switcher);
+        SceneCanvasView.CountdownZeroReached += () =>
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (CueModePage?.Engine != null && !RundownBusy)
+                {
+                    CueModePage.Engine.Go();
+                    Status("Countdown abgelaufen (00:00) ➔ Nächster Cue ausgelöst");
+                }
+            });
+        };
         CueModePage.SetSources(cues);
         CueModePage.Message += Status;
         CueModePage.SaveRequested += (sender, _) => SaveShow(sender!, new RoutedEventArgs());
         CueModePage.OpenRequested += (sender, _) => OpenShow(sender!, new RoutedEventArgs());
-        CueModePage.LibraryRequested += (_, _) => MixerNav.IsChecked = true;
+        CueModePage.LibraryRequested += (_, _) => PoolNav.IsChecked = true;
         CueModePage.Rundown.ContentsChanged += () =>
         {
             if (!loadingShow && settingsReady) dirty = true;

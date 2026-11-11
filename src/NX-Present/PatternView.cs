@@ -17,6 +17,7 @@ public sealed class PatternView : FrameworkElement
     private DrawingGroup? backgroundLayer, referenceLayer;
     private DrawingBrush? checkerBrush;
     private Size cachedSize;
+    private string pattern = "bars";
     private string cachedPattern = "";
     private double cachedDpi;
     private Pen whiteMarker = null!, blackMarker = null!, whiteOutline = null!, blackOutline = null!, scan = null!, ring = null!, whiteScan = null!, blackScan = null!;
@@ -24,7 +25,17 @@ public sealed class PatternView : FrameworkElement
     private double lastFrame = -1;
     private long sampleStart = Stopwatch.GetTimestamp();
     private int frameCount;
-    public string Pattern { get; set; } = "bars";
+    public string Pattern
+    {
+        get => pattern;
+        set
+        {
+            if (pattern == value) return;
+            pattern = value;
+            UpdateSubscription();
+            InvalidateVisual();
+        }
+    }
     public bool Live { get; init; } = true;
     public double FrameSeconds { get; set; }
     public double FramesPerSecond { get; private set; }

@@ -11,10 +11,10 @@
   <BooleanToVisibilityConverter x:Key="ShowWhenChecked"/>
   <!-- A card in the media pool. -->
   <Style x:Key="PoolCard" TargetType="Button">
-   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="104"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="{StaticResource NxCardRadius}">
+   <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="108"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
     <StackPanel>
-     <Grid Height="49" Margin="0,0,0,0" Background="{StaticResource Inset}">
+     <Grid Height="52" Margin="0,0,0,0" Background="{StaticResource Inset}">
       <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
       <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasThumbnail}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
      </Grid>
@@ -26,6 +26,143 @@
      <DataTrigger Binding="{Binding IsPreview}" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Preview}"/></DataTrigger>
      <DataTrigger Binding="{Binding IsProgram}" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Program}"/></DataTrigger>
     </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+  </Style>
+
+  <!-- AUX Output Channel Card (Top area of ATEM-style AUX Patcher) -->
+  <Style x:Key="AuxOutputCard" TargetType="Button">
+   <Setter Property="Focusable" Value="False"/>
+   <Setter Property="Width" Value="142"/>
+   <Setter Property="Height" Value="118"/>
+   <Setter Property="Margin" Value="0,0,8,8"/>
+   <Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+   <Setter Property="Template">
+    <Setter.Value>
+     <ControlTemplate TargetType="Button">
+      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+       <Grid>
+        <Grid.RowDefinitions>
+         <RowDefinition Height="66"/>
+         <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!-- 16:9 Live Preview Thumbnail -->
+        <Grid Background="{StaticResource Inset}" ClipToBounds="True">
+         <Image Source="{Binding Source.Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+         <TextBlock Text="{Binding Source.Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="22" Foreground="{StaticResource Dim}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock.Style>
+           <Style TargetType="TextBlock">
+            <Style.Triggers>
+             <DataTrigger Binding="{Binding Source.HasThumbnail}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+            </Style.Triggers>
+           </Style>
+          </TextBlock.Style>
+         </TextBlock>
+         <!-- Active Target Badge -->
+         <Border x:Name="TargetBadge" Background="{StaticResource Accent}" CornerRadius="2" Padding="5,1" Margin="4"
+                 HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed">
+          <TextBlock Text="ZIEL" Foreground="White" FontWeight="Bold" FontSize="8"/>
+         </Border>
+        </Grid>
+        <!-- Output Channel Info -->
+        <Border Grid.Row="1" Background="{StaticResource Chrome}" Padding="7,4,7,4">
+         <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Ink}" TextTrimming="CharacterEllipsis"/>
+          <TextBlock Text="{Binding Source.Name}" FontSize="10" Foreground="{StaticResource Muted}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
+         </StackPanel>
+        </Border>
+       </Grid>
+      </Border>
+      <ControlTemplate.Triggers>
+       <Trigger Property="IsMouseOver" Value="True">
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource LineStrong}"/>
+       </Trigger>
+       <DataTrigger Binding="{Binding IsSelected}" Value="True">
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Accent}"/>
+        <Setter TargetName="Frame" Property="Background" Value="{StaticResource AccentDark}"/>
+        <Setter TargetName="TargetBadge" Property="Visibility" Value="Visible"/>
+       </DataTrigger>
+      </ControlTemplate.Triggers>
+     </ControlTemplate>
+    </Setter.Value>
+   </Setter>
+  </Style>
+
+  <!-- Signal Source Card (Bottom area of ATEM-style AUX Patcher) -->
+  <Style x:Key="AuxSourceCard" TargetType="Button">
+   <Setter Property="Focusable" Value="False"/>
+   <Setter Property="Width" Value="136"/>
+   <Setter Property="Height" Value="114"/>
+   <Setter Property="Margin" Value="0,0,8,8"/>
+   <Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+   <Setter Property="Template">
+    <Setter.Value>
+     <ControlTemplate TargetType="Button">
+      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+       <Grid>
+        <Grid.RowDefinitions>
+         <RowDefinition Height="64"/>
+         <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!-- 16:9 Thumbnail -->
+        <Grid Background="{StaticResource Inset}" ClipToBounds="True">
+         <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+         <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="22" Foreground="{StaticResource Dim}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock.Style>
+           <Style TargetType="TextBlock">
+            <Style.Triggers>
+             <DataTrigger Binding="{Binding HasThumbnail}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+            </Style.Triggers>
+           </Style>
+          </TextBlock.Style>
+         </TextBlock>
+         <!-- Tally Badges -->
+         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4">
+          <Border x:Name="PgmBadge" Background="{StaticResource Program}" CornerRadius="2" Padding="4,1" Margin="0,0,3,0" Visibility="Collapsed">
+           <TextBlock Text="PGM" Foreground="White" FontWeight="Bold" FontSize="8"/>
+          </Border>
+          <Border x:Name="PvwBadge" Background="{StaticResource Preview}" CornerRadius="2" Padding="4,1" Visibility="Collapsed">
+           <TextBlock Text="PVW" Foreground="Black" FontWeight="Bold" FontSize="8"/>
+          </Border>
+         </StackPanel>
+         <!-- Routed Indicator -->
+         <Border x:Name="RoutedBadge" Background="{StaticResource Accent}" CornerRadius="2" Padding="4,1" Margin="4"
+                 HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed">
+          <TextBlock Text="GEROUTET" Foreground="White" FontWeight="Bold" FontSize="8"/>
+         </Border>
+        </Grid>
+        <!-- Source Info -->
+        <Border Grid.Row="1" Background="{StaticResource Chrome}" Padding="7,3,7,3">
+         <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="{Binding Category}" Style="{StaticResource Eyebrow}" FontSize="8" Margin="0,0,0,1" TextTrimming="CharacterEllipsis"/>
+          <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+         </StackPanel>
+        </Border>
+       </Grid>
+      </Border>
+      <ControlTemplate.Triggers>
+       <Trigger Property="IsMouseOver" Value="True">
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource LineStrong}"/>
+       </Trigger>
+       <DataTrigger Binding="{Binding IsProgram}" Value="True">
+        <Setter TargetName="PgmBadge" Property="Visibility" Value="Visible"/>
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Program}"/>
+       </DataTrigger>
+       <DataTrigger Binding="{Binding IsPreview}" Value="True">
+        <Setter TargetName="PvwBadge" Property="Visibility" Value="Visible"/>
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Preview}"/>
+       </DataTrigger>
+       <DataTrigger Binding="{Binding IsRouted}" Value="True">
+        <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Accent}"/>
+        <Setter TargetName="Frame" Property="Background" Value="{StaticResource AccentDark}"/>
+        <Setter TargetName="RoutedBadge" Property="Visibility" Value="Visible"/>
+       </DataTrigger>
+      </ControlTemplate.Triggers>
+     </ControlTemplate>
+    </Setter.Value>
+   </Setter>
   </Style>
  </Window.Resources>
  <Grid>
@@ -48,11 +185,11 @@
   </Border>
 
   <Grid Grid.Row="1">
-   <!-- ============ MIXER ============ -->
+   <!-- ============ MIXER (NORMAL MODUS - OHNE MEDIENPOOL) ============ -->
    <Grid x:Name="MixerPage" Margin="12,12,12,8">
     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <Grid>
-     <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="238"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="132"/></Grid.RowDefinitions>
+     <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="238"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
      <Grid Margin="0,0,0,8">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <local:MonitorView x:Name="Me1Monitor" Mode="Me1" Heading="ME1"/>
@@ -93,10 +230,10 @@
       </Grid>
      </Border>
 
-     <!-- AUX channels -->
-     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="8,7">
+     <!-- AUX channels strip in normal mode -->
+     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="8,7">
       <ItemsControl x:Name="AuxTiles" Focusable="False">
-       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="10" Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
        <ItemsControl.ItemTemplate>
         <DataTemplate>
          <Button Margin="3,0" Padding="0" Click="AuxClicked" AutomationProperties.Name="{Binding Name}" MinWidth="0"
@@ -122,27 +259,6 @@
         </DataTemplate>
        </ItemsControl.ItemTemplate>
       </ItemsControl>
-     </Border>
-
-     <!-- Media pool -->
-     <Border Grid.Row="3" Style="{StaticResource PanelBorder}" Padding="12,10,6,0">
-      <Grid>
-       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-       <Grid Margin="0,0,6,8">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <TextBlock Text="Medienpool" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
-        <TextBlock x:Name="PoolCount" Grid.Column="1" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"><RadioButton x:Name="AllFilter" Content="Alle" GroupName="PoolFilter" Tag="all" Style="{StaticResource FilterButton}" IsChecked="True" Checked="PoolFilterChanged"/><RadioButton Content="Medien" GroupName="PoolFilter" Tag="media" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/><RadioButton Content="Testbilder" GroupName="PoolFilter" Tag="patterns" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/></StackPanel>
-        <Grid Grid.Column="4" Width="190" Margin="0,0,8,0"><TextBox x:Name="PoolSearch" MinHeight="26" Padding="26,3,8,3" TextChanged="PoolSearchChanged" ToolTip="Pool durchsuchen" AutomationProperties.Name="Pool durchsuchen"/><TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/><TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=PoolSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
-        <Button x:Name="AddContentButton" Grid.Column="5" Content="+ Hinzufügen" MinHeight="26" Padding="12,3" Focusable="False" Click="OpenAddMenu"><Button.ContextMenu><ContextMenu><MenuItem Header="Bilder / Videos hinzufügen …" Click="AddFiles"/><MenuItem Header="Webseite hinzufügen …" Click="AddWebsite"/><MenuItem Header="Text hinzufügen …" Click="AddText"/><Separator/><MenuItem Header="Uhr hinzufügen" Click="AddClock"/></ContextMenu></Button.ContextMenu></Button>
-       </Grid>
-       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto" Focusable="False" PreviewMouseWheel="PoolMouseWheel">
-        <Grid>
-         <ItemsControl x:Name="PoolItems" Focusable="False" Margin="0,0,6,0"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Button Style="{StaticResource PoolCard}" Click="PoolCardClicked" ToolTip="{Binding Name}"><Button.ContextMenu><ContextMenu><MenuItem Header="Ins inaktive ME laden" Click="PoolPreviewClicked"/><MenuItem Header="Direkt übernehmen (CUT)" Click="PoolCutClicked"/><Separator/><MenuItem Header="Aus dem Pool entfernen" Click="PoolRemoveClicked"/></ContextMenu></Button.ContextMenu></Button></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-         <TextBlock x:Name="EmptyPool" Text="Keine passenden Inhalte.&#x0a;Ziehe Dateien hierher oder nutze + Hinzufügen." Style="{StaticResource Hint}" Margin="6,20" Visibility="Collapsed" IsHitTestVisible="False"/>
-        </Grid>
-       </ScrollViewer>
-      </Grid>
      </Border>
     </Grid>
 
@@ -171,48 +287,211 @@
        <TextBlock x:Name="InfoDetail" Style="{StaticResource Hint}" FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
        <Button x:Name="ReloadButton" Content="Webseite neu laden" Margin="0,10,0,0" Focusable="False" Click="ReloadClicked" Visibility="Collapsed"/>
       </StackPanel></Border>
-</StackPanel>
+     </StackPanel>
     </ScrollViewer>
    </Grid>
 
-   <!-- ============ CUE MODE ============ -->
-   <ScrollViewer x:Name="AuxPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="12,12,12,8">
-    <StackPanel MaxWidth="780" Margin="12,4,12,12">
-     <Border Style="{StaticResource PanelBorder}" Padding="16">
-      <StackPanel>
-       <TextBlock Text="AUX-Patcher" FontSize="20" FontWeight="SemiBold"/>
-       <TextBlock Text="Lege für jeden AUX-Kanal eine Quelle fest. Im Mischer lädt die Kachel den Kanal ins inaktive ME." Style="{StaticResource Hint}" Margin="0,6,0,12"/>
-       <ItemsControl x:Name="AuxRoutes">
+   <!-- ============ AUX-PATCHER (ATEM SOFTWARE CONTROL) ============ -->
+   <Grid x:Name="AuxPage" Visibility="Collapsed" Margin="12,12,12,8">
+    <Grid.RowDefinitions>
+     <RowDefinition Height="Auto"/>
+     <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- OBERER BEREICH: AUX-AUSGÄNGE -->
+    <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="14,10">
+     <Grid>
+      <Grid.RowDefinitions>
+       <RowDefinition Height="Auto"/>
+       <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <!-- Header row -->
+      <Grid Margin="0,0,0,10">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+       </Grid.ColumnDefinitions>
+       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock Text="AUX-AUSGÄNGE" Style="{StaticResource SectionTitle}" Margin="0,0,8,0"/>
+        <Border Background="{StaticResource Raised}" CornerRadius="3" Padding="6,2" VerticalAlignment="Center">
+         <TextBlock x:Name="AuxOutputsCount" Text="10 KANÄLE" Style="{StaticResource Eyebrow}" FontSize="9"/>
+        </Border>
+       </StackPanel>
+       <TextBlock Grid.Column="1" Text="Klicke auf einen AUX-Kanal, um ihn für das Routing auszuwählen." Style="{StaticResource Hint}" FontSize="11" VerticalAlignment="Center" Margin="14,0,0,0"/>
+       <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+        <Border Background="{StaticResource Chrome}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="3" Padding="10,3" VerticalAlignment="Center">
+         <TextBlock x:Name="SelectedAuxTargetHeader" Text="Aktives Routing-Ziel: AUX 1" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentText}"/>
+        </Border>
+        <Button Content="🎬 OBS-Szeneneditor" Style="{StaticResource PrimaryButton}" MinHeight="26" Padding="10,2" Margin="8,0,0,0" Click="EditCurrentAuxScene" ToolTip="Öffnet den OBS-Szeneneditor für den ausgewählten AUX-Kanal"/>
+       </StackPanel>
+      </Grid>
+
+      <!-- AUX Channel Tiles -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto" Focusable="False">
+       <ItemsControl x:Name="AuxOutputs" Focusable="False">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
          <DataTemplate>
-          <Grid Margin="0,0,0,5">
-           <Grid.ColumnDefinitions><ColumnDefinition Width="88"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-           <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-           <ComboBox Grid.Column="1" MinHeight="30" ItemsSource="{Binding Choices}" SelectedItem="{Binding Source, Mode=OneWay}"
-                     SelectionChanged="AuxSourceChanged" AutomationProperties.Name="{Binding Name}">
-            <ComboBox.ItemTemplate>
-             <DataTemplate>
-              <Grid>
-               <Grid.ColumnDefinitions><ColumnDefinition Width="98"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-               <TextBlock Text="{Binding Category}" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
-               <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-              </Grid>
-             </DataTemplate>
-            </ComboBox.ItemTemplate>
-           </ComboBox>
-          </Grid>
+          <Button Style="{StaticResource AuxOutputCard}" Click="AuxPatcherChannelClicked" AutomationProperties.Name="{Binding Name}"
+                  ToolTip="{Binding Source.Name, StringFormat={}Kanal {0} · Klicke zum Auswählen}">
+           <Button.ContextMenu>
+            <ContextMenu>
+             <MenuItem Header="Ins inaktive ME laden" Click="AuxOutputPreviewClicked"/>
+             <MenuItem Header="Direkt übernehmen (CUT)" Click="AuxOutputCutClicked"/>
+              <Separator/>
+              <MenuItem Header="🎬 Im OBS-Szeneneditor bearbeiten …" Click="AuxOutputEditSceneClicked"/>
+            </ContextMenu>
+           </Button.ContextMenu>
+          </Button>
          </DataTemplate>
         </ItemsControl.ItemTemplate>
        </ItemsControl>
-       <WrapPanel Margin="0,9,0,0">
-        <Button x:Name="RefreshCaptureButton" Content="Aufnahmegeräte neu erkennen" Click="RefreshCaptureClicked" Margin="0,0,10,0"/>
-        <TextBlock x:Name="CaptureSummary" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-       </WrapPanel>
-       <TextBlock Text="Kameras und HDMI-Capture-Karten liefern Bild über die in Windows erkannten Aufnahmegeräte." Style="{StaticResource Hint}" Margin="0,7,0,0"/>
-      </StackPanel>
-     </Border>
-    </StackPanel>
-   </ScrollViewer>
+      </ScrollViewer>
+     </Grid>
+    </Border>
+
+    <!-- UNTERER BEREICH: NORMALE SIGNALQUELLEN -->
+    <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="14,10">
+     <Grid>
+      <Grid.RowDefinitions>
+       <RowDefinition Height="Auto"/>
+       <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <!-- Source selection header & controls -->
+      <Grid Margin="0,0,0,10">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+       </Grid.ColumnDefinitions>
+       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock Text="SIGNALQUELLEN" Style="{StaticResource SectionTitle}" Margin="0,0,8,0"/>
+        <TextBlock x:Name="AuxSourceCount" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+       </StackPanel>
+       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <RadioButton x:Name="AuxAllSourcesFilter" Content="Alle" GroupName="AuxSourceFilter" Tag="all" Style="{StaticResource FilterButton}" IsChecked="True" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Kameras &amp; Eingänge" GroupName="AuxSourceFilter" Tag="capture" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Anwendungen" GroupName="AuxSourceFilter" Tag="windows" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Medien" GroupName="AuxSourceFilter" Tag="media" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Szenen" GroupName="AuxSourceFilter" Tag="scenes" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Cue-Show" GroupName="AuxSourceFilter" Tag="cueshow" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+        <RadioButton Content="Testbilder" GroupName="AuxSourceFilter" Tag="patterns" Style="{StaticResource FilterButton}" Checked="AuxSourceFilterChanged"/>
+       </StackPanel>
+
+       <!-- Selected target readout -->
+       <TextBlock Grid.Column="2" x:Name="SelectedAuxTargetLabel" Text="Zuweisung für: AUX 1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentText}"/>
+
+       <!-- Search box -->
+       <Grid Grid.Column="3" Width="190" Margin="0,0,10,0">
+        <TextBox x:Name="AuxSourceSearch" MinHeight="26" Padding="26,3,8,3" TextChanged="AuxSourceSearchChanged" ToolTip="Signalquellen durchsuchen" AutomationProperties.Name="Quellen durchsuchen"/>
+        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/>
+        <TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False">
+         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=AuxSourceSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+        </TextBlock>
+       </Grid>
+
+       <!-- Capture refresh -->
+       <Button x:Name="RefreshCaptureButton" Grid.Column="4" Content="Eingänge &amp; Fenster neu erkennen" MinHeight="26" Padding="10,3" Click="RefreshCaptureClicked" Margin="0,0,8,0"/>
+       <TextBlock x:Name="CaptureSummary" Grid.Column="5" Style="{StaticResource Hint}" VerticalAlignment="Center" FontSize="11"/>
+      </Grid>
+
+      <!-- Source Tiles Grid -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+       <Grid>
+        <ItemsControl x:Name="AuxSources" Focusable="False">
+         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+         <ItemsControl.ItemTemplate>
+          <DataTemplate>
+           <Button Style="{StaticResource AuxSourceCard}" Click="AuxPatcherSourceClicked" AutomationProperties.Name="{Binding Name}"
+                   ToolTip="{Binding Name, StringFormat={}Klick weist diese Quelle dem ausgewählten AUX-Kanal zu: {0}}"/>
+          </DataTemplate>
+         </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock x:Name="EmptyAuxSources" Text="Keine passenden Signalquellen gefunden." Style="{StaticResource Hint}" Margin="8,24" Visibility="Collapsed" IsHitTestVisible="False"/>
+       </Grid>
+      </ScrollViewer>
+     </Grid>
+    </Border>
+   </Grid>
+
+   <!-- ============ MEDIENPOOL (SEPARATER MODUS) ============ -->
+   <Grid x:Name="PoolPage" Visibility="Collapsed" Margin="12,12,12,8">
+    <Border Style="{StaticResource PanelBorder}" Padding="16,14">
+     <Grid>
+      <Grid.RowDefinitions>
+       <RowDefinition Height="Auto"/>
+       <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <!-- Top bar -->
+      <Grid Margin="0,0,0,12">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+       </Grid.ColumnDefinitions>
+       <TextBlock Text="Medienpool" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
+       <TextBlock x:Name="PoolCount" Grid.Column="1" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+       <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+        <RadioButton x:Name="AllFilter" Content="Alle" GroupName="PoolFilter" Tag="all" Style="{StaticResource FilterButton}" IsChecked="True" Checked="PoolFilterChanged"/>
+        <RadioButton Content="Medien" GroupName="PoolFilter" Tag="media" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/>
+        <RadioButton Content="Testbilder" GroupName="PoolFilter" Tag="patterns" Style="{StaticResource FilterButton}" Checked="PoolFilterChanged"/>
+       </StackPanel>
+       <Grid Grid.Column="4" Width="220" Margin="0,0,10,0">
+        <TextBox x:Name="PoolSearch" MinHeight="28" Padding="26,4,8,4" TextChanged="PoolSearchChanged" ToolTip="Medienpool durchsuchen" AutomationProperties.Name="Pool durchsuchen"/>
+        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/>
+        <TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False">
+         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=PoolSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+        </TextBlock>
+       </Grid>
+       <Button x:Name="AddContentButton" Grid.Column="5" Content="+ Hinzufügen" Style="{StaticResource PrimaryButton}" MinHeight="28" Padding="14,4" Focusable="False" Click="OpenAddMenu">
+        <Button.ContextMenu>
+         <ContextMenu>
+          <MenuItem Header="Bilder / Videos hinzufügen …" Click="AddFiles"/>
+          <MenuItem Header="Anwendung / Fenster erfassen …" Click="AddWindowCapture"/>
+          <MenuItem Header="Webseite hinzufügen …" Click="AddWebsite"/>
+          <MenuItem Header="Text hinzufügen …" Click="AddText"/>
+          <Separator/>
+          <MenuItem Header="Uhr hinzufügen" Click="AddClock"/>
+         </ContextMenu>
+        </Button.ContextMenu>
+       </Button>
+      </Grid>
+      <!-- Cards Grid -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+       <Grid>
+        <ItemsControl x:Name="PoolItems" Focusable="False">
+         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+         <ItemsControl.ItemTemplate>
+          <DataTemplate>
+           <Button Style="{StaticResource PoolCard}" Click="PoolCardClicked" ToolTip="{Binding Name}">
+            <Button.ContextMenu>
+             <ContextMenu>
+              <MenuItem Header="Ins inaktive ME laden" Click="PoolPreviewClicked"/>
+              <MenuItem Header="Direkt übernehmen (CUT)" Click="PoolCutClicked"/>
+              <Separator/>
+              <MenuItem Header="Aus dem Pool entfernen" Click="PoolRemoveClicked"/>
+             </ContextMenu>
+            </Button.ContextMenu>
+           </Button>
+          </DataTemplate>
+         </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock x:Name="EmptyPool" Text="Keine passenden Inhalte.&#x0a;Ziehe Dateien hierher oder nutze + Hinzufügen." Style="{StaticResource Hint}" Margin="8,24" Visibility="Collapsed" IsHitTestVisible="False"/>
+       </Grid>
+      </ScrollViewer>
+     </Grid>
+    </Border>
+   </Grid>
 
    <local:CueModeView x:Name="CueModePage" Visibility="Collapsed" Margin="12,12,12,8"/>
 
@@ -307,6 +586,7 @@
    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
     <RadioButton x:Name="MixerNav" Tag="mixer" GroupName="Navigation" Style="{StaticResource NavButton}" IsChecked="True" Checked="NavigationChanged" AutomationProperties.Name="Mischer"><StackPanel><TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="MISCHER" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>
     <RadioButton x:Name="AuxNav" Tag="aux" GroupName="Navigation" Style="{StaticResource NavButton}" Checked="NavigationChanged" AutomationProperties.Name="AUX-Patcher"><StackPanel><TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="AUX-PATCHER" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>
+    <RadioButton x:Name="PoolNav" Tag="pool" GroupName="Navigation" Style="{StaticResource NavButton}" Checked="NavigationChanged" AutomationProperties.Name="Medienpool"><StackPanel><TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="MEDIENPOOL" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>
     <RadioButton x:Name="CueModeNav" Tag="cues" GroupName="Navigation" Style="{StaticResource NavButton}" Checked="NavigationChanged" AutomationProperties.Name="Cue Mode"><StackPanel><TextBlock Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="CUES" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>
     <RadioButton x:Name="SettingsNav" Tag="settings" GroupName="Navigation" Style="{StaticResource NavButton}" Checked="NavigationChanged" AutomationProperties.Name="Einstellungen"><StackPanel><TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="SETUP" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>
     <RadioButton x:Name="HelpNav" Tag="help" GroupName="Navigation" Style="{StaticResource NavButton}" Checked="NavigationChanged" AutomationProperties.Name="Hilfe"><StackPanel><TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="15" HorizontalAlignment="Center"/><TextBlock Text="HILFE" FontSize="9" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel></RadioButton>

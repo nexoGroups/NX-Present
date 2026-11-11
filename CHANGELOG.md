@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.7.0-beta.1 – Szenen, Fensteraufnahme und Cue Mode
+
+- Im Szeneneditor kombinierst du Bilder, Text, Uhr und Countdown auf einer 16:9-Fläche. Vorlagen für Pre-Show, Song-Anzeige und Bauchbinden dienen als Ausgangspunkt. Szenen lassen sich im Medienpool ablegen oder einem AUX-Kanal zuweisen.
+- Mit **Anwendung erfassen** nimmst du ein geöffnetes Windows-Fenster als Bildquelle auf. Szenen können auch Titel und Cover aus der Windows-Mediensitzung sowie einen Audio-Visualizer anzeigen.
+- Der Medienpool hat eine eigene Seite. Im überarbeiteten AUX-Patcher wählst du oben den Zielkanal und unten die Quelle. Die Kanäle zeigen eine Vorschau ihrer Zuweisung.
+- Video-Cues unterstützen In- und Out-Punkte. Die Quelle **Cue-Show** zeigt in dieser Beta eine Platzhaltertafel.
+- Die Beta wird über **NXPresent-beta-Setup.exe** bewusst installiert. Installierte Beta-Versionen suchen auf dem Beta-Kanal nach neueren Vorabversionen. Der Stable-Kanal liefert reguläre Versionen aus.
+
 ## 0.6.0 – ME1, ME2 und AUX-Patcher
 
 - ME1 und ME2 stehen fest im Mischer. CUT, AUTO und der Überblender wechseln die Projektion zum jeweils anderen ME.

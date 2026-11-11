@@ -4,26 +4,39 @@ param(
     [string]$ReleaseDir
 )
 # Prueft die Dateien einer NX-Present-Veroeffentlichung und schreibt SHA256SUMS.txt.
-# Installierte Kopien finden eine Version nur, wenn die Update-Liste (releases.win.json) und das volle Paket dabei sind.
+# Installierte Kopien brauchen die Update-Liste ihres Kanals und das volle Paket.
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 if (-not $ReleaseDir) { $ReleaseDir = Join-Path $root 'artifacts\release' }
-if ($Version -notmatch '^\d{1,4}\.\d{1,4}\.\d{1,4}$') { throw "Version '$Version' ist nicht von der Form X.Y.Z." }
+if ($Version -cnotmatch '^\d{1,4}\.\d{1,4}\.\d{1,4}(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?$') {
+    throw "Ungueltige Release-Version '$Version'."
+}
 
 [xml]$project = Get-Content -LiteralPath (Join-Path $root 'src\NX-Present\NX-Present.csproj')
 $projectVersion = [string]$project.Project.PropertyGroup.Version
 if ($projectVersion -ne $Version) { throw "Die csproj hat Version '$projectVersion', verlangt ist '$Version'. Erst die Versionsnummer anheben und neu bauen." }
 
 $packId = 'NXPresent'
-$required = @("$packId-win-Setup.exe", "$packId-win-Portable.zip", "$packId-$Version-full.nupkg", 'releases.win.json')
+$prerelease = $Version.Contains('-')
+$channel = if ($prerelease) { 'beta' } else { 'win' }
+$packageVersion = if ($prerelease) { "$Version-$channel" } else { $Version }
+$setupName = "$packId-$channel-Setup.exe"
+$portableName = "$packId-$channel-Portable.zip"
+$packageName = "$packId-$packageVersion-full.nupkg"
+$feedName = "releases.$channel.json"
+$required = @($setupName, $portableName, $packageName, $feedName)
 foreach ($name in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $ReleaseDir $name))) { throw "Es fehlt $name in $ReleaseDir. Erst mit scripts\Build.ps1 -Installer bauen." }
 }
-$feed = Get-Content -LiteralPath (Join-Path $ReleaseDir 'releases.win.json') -Raw
-if ($feed -notmatch [regex]::Escape("$packId-$Version-full.nupkg")) { throw "releases.win.json nennt $packId-$Version-full.nupkg nicht." }
+$feed = Get-Content -LiteralPath (Join-Path $ReleaseDir $feedName) -Raw | ConvertFrom-Json
+$full = $feed.Assets | Where-Object { $_.FileName -ceq $packageName -and $_.Version -ceq $Version }
+if (-not $full) { throw "$feedName nennt $packageName nicht." }
+if ($prerelease -and (Test-Path -LiteralPath (Join-Path $ReleaseDir 'releases.win.json'))) {
+    throw "Im Beta-Ordner liegt eine Stable-Update-Liste."
+}
 
 $sourcesName = "NX-Present-ThirdParty-Sources-$Version.zip"
-$files = @((Join-Path $ReleaseDir "$packId-win-Setup.exe"), (Join-Path $ReleaseDir "$packId-win-Portable.zip"))
+$files = @((Join-Path $ReleaseDir $setupName), (Join-Path $ReleaseDir $portableName))
 $sources = Join-Path $ReleaseDir $sourcesName
 if (Test-Path -LiteralPath $sources) { $files += $sources }
 else { Write-Warning "$sourcesName fehlt. Jede Veroeffentlichung braucht das Quellarchiv der Fremdkomponenten (Get-ThirdPartySources.ps1 und Compress-Archive)." }

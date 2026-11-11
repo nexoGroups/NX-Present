@@ -12,9 +12,15 @@ Der Mischer arbeitet auch ohne Ausgabe. Das für die Projektion gewählte ME ist
 
 **ME1** links und **ME2** rechts zeigen ihre Quellen an festen Plätzen. Rot markiert das für die Projektion gewählte ME. Ein Video im inaktiven ME wartet auf seinem ersten Bild und lässt sich dort mit der Wiedergabeleiste prüfen.
 
-- **AUX 1–10:** Jeder Kanal zeigt ein Standbild seiner Quelle. Ein Klick lädt sie ins inaktive ME. Die Tasten **1** bis **9** wählen AUX 1 bis 9, **0** wählt AUX 10.
-- **AUX-Patcher:** Wähle im eigenen Tab je Kanal eine Quelle aus dem Medienpool, Schwarz oder ein Windows-Aufnahmegerät. HDMI läuft über eine Capture-Karte. Externe Eingänge liefern Bild. Mit **Aufnahmegeräte neu erkennen** aktualisierst du die Liste.
-- **Medienpool:** alle Quellen als Karten mit Vorschaubild. Ein Klick lädt die Quelle ins inaktive ME. Das Kontextmenü bietet außerdem **Direkt übernehmen (CUT)** und **Aus dem Pool entfernen**.
+- **AUX 1–10:** Jeder Kanal zeigt ein Vorschaubild seiner Quelle. Ein Klick lädt sie ins inaktive ME. Die Tasten **1** bis **9** wählen AUX 1 bis 9, **0** wählt AUX 10.
+- **AUX-Patcher:** Orientiert sich an Blackmagic ATEM Software Control mit getrennten Bereichen: Oben werden sämtliche AUX-Ausgänge als Kacheln mit Live-Vorschau dargestellt; ein Klick wählt den AUX-Kanal für das Routing aus. Unten befinden sich alle regulären Signalquellen (Kameras, Capture-Eingänge, Medien, Testbilder, Schwarz); ein Klick weist die Quelle unmittelbar dem ausgewählten AUX-Kanal zu. Mit **Aufnahmegeräte neu erkennen** werden HDMI- und USB-Aufnahmegeräte aktualisiert.
+- **Medienpool:** Im normalen Modus vollständig ausgeblendet, um die Live-Bedienoberfläche übersichtlich und fokussiert zu halten. Über den separaten Modus **MEDIENPOOL** in der Seitenleiste/Navigationsleiste erreichbar. Dort lassen sich alle Quellen verwalten, durchsuchen, filtern und neue Inhalte hinzufügen.
+
+### Szenen und Anwendungsfenster
+
+- Unter **AUX-Patcher → OBS-Szeneneditor** öffnest du den Szeneneditor für den ausgewählten Kanal. Wähle eine Vorlage und passe Quellen, Ebenen und Positionen an. Beim Speichern kannst du die Szene im Medienpool ablegen oder einem AUX-Kanal zuweisen.
+- Unter **Medienpool → Hinzufügen → Anwendung / Fenster erfassen** öffnest du die Liste der verfügbaren Windows-Fenster. Das ausgewählte Fenster erscheint als Bildquelle im Medienpool.
+- Für Video-Cues stellst du im Inspektor In- und Out-Punkte ein. Die Quelle **Cue-Show** im AUX-Patcher zeigt in dieser Beta eine Platzhaltertafel.
 
 ### CUT, AUTO und Überblender
 

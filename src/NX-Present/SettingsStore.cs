@@ -66,9 +66,17 @@ public static class SettingsStore
         AuxRouting.Validate(settings.AuxSources);
         if (settings.Rundown != null) CueRundown.Validate(settings.Rundown);
         path ??= PathName;
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-        string temporary = path + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
-        File.Move(temporary, path, true);
+        string folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        Directory.CreateDirectory(folder);
+        string temporary = Path.Combine(folder, "." + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(temporary, path, true);
+        }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); } catch { }
+        }
     }
 }

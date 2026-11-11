@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace NXPresent;
 public enum UpdateState { UpToDate, Available, Failed, NotInstalled }
 
 /// <summary>A newer release that Velopack found in the update feed of the official GitHub release page.</summary>
-public sealed record UpdateOffer(Version Version, UpdateInfo Info, Uri ReleasePage);
+public sealed record UpdateOffer(SemanticVersion Version, UpdateInfo Info, Uri ReleasePage);
 
 public sealed record UpdateCheck(UpdateState State, string Message, UpdateOffer? Offer = null);
 
@@ -29,20 +30,24 @@ public sealed class UpdateService
     /// <summary>Points the updater at another feed (a folder or an address) to try out a release before it is published.</summary>
     public const string SourceOverrideVariable = "NXPRESENT_UPDATE_SOURCE";
 
-    private static readonly Regex VersionText = new(@"^[vV]?(\d{1,4})\.(\d{1,4})\.(\d{1,4})$", RegexOptions.CultureInvariant);
+    private static readonly Regex VersionText = new(@"\A[vV]?\d{1,4}\.\d{1,4}\.\d{1,4}(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?\z", RegexOptions.CultureInvariant);
 
     private readonly UpdateManager manager;
 
-    public static Version CurrentVersion { get; } = Normalize(typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0));
+    public static SemanticVersion CurrentVersion { get; } = SemanticVersion.Parse(
+        typeof(UpdateService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0]);
+
+    public static string UpdateChannel => CurrentVersion.IsPrerelease ? "beta" : "win";
 
     /// <param name="sourceOverride">A feed folder or address. When null, the environment variable <see cref="SourceOverrideVariable"/> decides, and without it the official release page is used.</param>
     public UpdateService(string? sourceOverride = null)
     {
         string? source = string.IsNullOrWhiteSpace(sourceOverride) ? Environment.GetEnvironmentVariable(SourceOverrideVariable) : sourceOverride;
         UsesOverride = !string.IsNullOrWhiteSpace(source);
+        var options = new UpdateOptions { ExplicitChannel = UpdateChannel };
         manager = UsesOverride
-            ? new UpdateManager(source!.Trim())
-            : new UpdateManager(new GithubSource(RepositoryUrl, accessToken: null, prerelease: false));
+            ? new UpdateManager(source!.Trim(), options)
+            : new UpdateManager(new GithubSource(RepositoryUrl, accessToken: null, prerelease: CurrentVersion.IsPrerelease), options);
     }
 
     /// <summary>True when the feed does not come from the official release page.</summary>
@@ -51,33 +56,35 @@ public sealed class UpdateService
     /// <summary>Only copies that Setup installed can be updated. A build from source has no Velopack install around it.</summary>
     public bool IsInstalled => manager.IsInstalled;
 
-    public static Version Normalize(Version version) => new(version.Major, version.Minor, Math.Max(version.Build, 0));
-
-    /// <summary>Accepts plain release versions such as 0.4.1 or v0.4.1. Anything with a suffix (-beta, +build) is not offered.</summary>
-    public static bool TryParseVersion(string? text, out Version version)
+    public static bool TryParseVersion(string? text, out SemanticVersion version)
     {
-        version = new Version(0, 0, 0);
-        if (text == null) return false;
-        var match = VersionText.Match(text.Trim());
-        if (!match.Success) return false;
-        version = new Version(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value));
-        return true;
+        text = text?.Trim();
+        if (text != null && VersionText.IsMatch(text) && SemanticVersion.TryParse(text.TrimStart('v', 'V'), out var parsed))
+        {
+            version = parsed;
+            return true;
+        }
+        version = null!;
+        return false;
     }
 
-    public static Uri ReleasePageFor(Version version) => new(RepositoryUrl + "/releases/tag/v" + version.ToString(3));
+    internal static bool CanOffer(SemanticVersion current, SemanticVersion target) =>
+        current.IsPrerelease == target.IsPrerelease && target > current;
 
-    public async Task<UpdateCheck> CheckAsync(Version current, CancellationToken cancellation = default)
+    public static Uri ReleasePageFor(SemanticVersion version) => new(RepositoryUrl + "/releases/tag/v" + version);
+
+    public async Task<UpdateCheck> CheckAsync(CancellationToken cancellation = default)
     {
         if (!IsInstalled)
             return new(UpdateState.NotInstalled, "Diese Kopie wurde nicht über das Setup installiert und lässt sich nicht selbst ersetzen. Lade das Setup von der Veröffentlichungsseite.");
         try
         {
             var info = await manager.CheckForUpdatesAsync().WaitAsync(cancellation).ConfigureAwait(false);
-            if (info == null) return new(UpdateState.UpToDate, "NX-Present " + current.ToString(3) + " ist aktuell.");
+            if (info == null) return new(UpdateState.UpToDate, "NX-Present " + CurrentVersion + " ist aktuell.");
             string text = info.TargetFullRelease.Version.ToString();
             if (!TryParseVersion(text, out var version)) return new(UpdateState.Failed, "Die neueste Veröffentlichung hat keine lesbare Versionsnummer (" + text + ").");
-            if (version <= Normalize(current)) return new(UpdateState.UpToDate, "NX-Present " + current.ToString(3) + " ist aktuell.");
-            return new(UpdateState.Available, "Version " + version.ToString(3) + " ist verfügbar.", new UpdateOffer(version, info, ReleasePageFor(version)));
+            if (!CanOffer(CurrentVersion, version)) return new(UpdateState.UpToDate, "NX-Present " + CurrentVersion + " ist aktuell.");
+            return new(UpdateState.Available, "Version " + version + " ist verfügbar.", new UpdateOffer(version, info, ReleasePageFor(version)));
         }
         catch (OperationCanceledException) when (!cancellation.IsCancellationRequested) { return new(UpdateState.Failed, "GitHub antwortet nicht (Zeitüberschreitung)."); }
         catch (HttpRequestException ex) { return new(UpdateState.Failed, "Keine Verbindung zu GitHub: " + ex.Message); }

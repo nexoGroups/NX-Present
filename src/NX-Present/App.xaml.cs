@@ -26,6 +26,15 @@ public partial class App : System.Windows.Application
         if (!created) { MessageBox.Show("NX-Present läuft bereits.", "NX-Present"); Shutdown(); return; }
         Directory.CreateDirectory(DataDirectory);
         Trace("Startup");
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex) Log(ex);
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log(args.Exception);
+            args.SetObserved();
+        };
         DispatcherUnhandledException += (_, args) =>
         {
             Log(args.Exception);

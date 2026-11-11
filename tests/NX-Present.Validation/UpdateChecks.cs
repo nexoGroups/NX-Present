@@ -1,5 +1,6 @@
 using System.IO;
 using NXPresent;
+using Velopack;
 
 /// <summary>
 /// The update service and the update settings. Nothing is downloaded or installed here: Velopack itself only works in a copy
@@ -13,17 +14,23 @@ static class UpdateChecks
         Velopack.VelopackApp.Build().Run();
 
         // ---- version numbers ----
-        check(UpdateService.TryParseVersion("0.4.1", out var v) && v == new Version(0, 4, 1), "Update: release version is read");
-        check(UpdateService.TryParseVersion("v0.5.0", out v) && v == new Version(0, 5, 0), "Update: release version with v is read");
+        check(UpdateService.TryParseVersion("0.4.1", out var v) && v == SemanticVersion.Parse("0.4.1"), "Update: release version is read");
+        check(UpdateService.TryParseVersion("v0.5.0", out v) && v == SemanticVersion.Parse("0.5.0"), "Update: release version with v is read");
         foreach (var bad in new[] { "0.4.1-beta", "0.4.1+build5", "1.2", "latest", "", "0.4.1.2", "v-1.0.0" })
             check(!UpdateService.TryParseVersion(bad, out _), "Update: version \"" + bad + "\" is not offered");
         check(!UpdateService.TryParseVersion(null, out _), "Update: missing version is not offered");
-        check(UpdateService.Normalize(new Version(0, 4)) == new Version(0, 4, 0) && UpdateService.Normalize(new Version(0, 4, 0, 0)) == new Version(0, 4, 0), "Update: assembly versions compare equal to release versions");
-        check(UpdateService.CurrentVersion.Revision <= 0 && UpdateService.CurrentVersion.Build >= 0, "Update: running version is a plain major.minor.build");
+        var stable = SemanticVersion.Parse("0.6.0");
+        var nextStable = SemanticVersion.Parse("0.7.0");
+        var beta = SemanticVersion.Parse("0.7.0-beta.1");
+        var nextBeta = SemanticVersion.Parse("0.7.0-beta.2");
+        check(UpdateService.TryParseVersion("v0.7.0-beta.1", out v) && v == beta, "Update: beta version preserves its prerelease suffix");
+        check(UpdateService.CanOffer(stable, nextStable) && !UpdateService.CanOffer(stable, beta), "Update: stable only offers newer stable versions");
+        check(UpdateService.CanOffer(beta, nextBeta) && !UpdateService.CanOffer(nextBeta, beta) && !UpdateService.CanOffer(beta, nextStable), "Update: beta only offers newer prereleases");
+        check(UpdateService.CurrentVersion.IsPrerelease == (UpdateService.UpdateChannel == "beta"), "Update: running version selects its release channel");
 
         // ---- addresses ----
         check(UpdateService.RepositoryUrl == "https://github.com/nexoGroups/NX-Present" && UpdateService.Repository == "nexoGroups/NX-Present", "Update: the official repository is nexoGroups/NX-Present");
-        check(UpdateService.ReleasePageFor(new Version(0, 4, 1)).AbsoluteUri == "https://github.com/nexoGroups/NX-Present/releases/tag/v0.4.1", "Update: release notes page is built from the version");
+        check(UpdateService.ReleasePageFor(beta).AbsoluteUri == "https://github.com/nexoGroups/NX-Present/releases/tag/v0.7.0-beta.1", "Update: release notes page includes the beta suffix");
         check(UpdateService.SourceOverrideVariable == "NXPRESENT_UPDATE_SOURCE", "Update: the test feed variable has its documented name");
 
         // ---- a copy that is not installed is never updated ----
@@ -32,9 +39,9 @@ static class UpdateChecks
         var service = new UpdateService(feed);
         check(service.UsesOverride, "Update: a given feed folder replaces the official release page");
         check(!service.IsInstalled, "Update: a build from the source tree is not an installed copy");
-        var result = await service.CheckAsync(new Version(0, 4, 0));
+        var result = await service.CheckAsync();
         check(result.State == UpdateState.NotInstalled && result.Offer == null, "Update: a copy that is not installed gets no offer");
-        var offerless = new UpdateOffer(new Version(0, 4, 1), null!, UpdateService.ReleasePageFor(new Version(0, 4, 1)));
+        var offerless = new UpdateOffer(beta, null!, UpdateService.ReleasePageFor(beta));
         check(await Thrown(() => service.DownloadAsync(offerless, null, CancellationToken.None)) is InvalidOperationException, "Update: a copy that is not installed downloads nothing");
         check(Thrown(() => Task.Run(() => service.ApplyAfterExit(offerless))).Result is InvalidOperationException, "Update: a copy that is not installed never starts the updater");
 

@@ -18,6 +18,9 @@ public sealed class FeedFactory
         CueKind.Video => new VideoFeed(cue, engine),
         CueKind.Capture => new CaptureFeed(cue),
         CueKind.Website => new WebFeed(cue, web),
+        CueKind.WindowCapture => new WindowCaptureFeed(cue),
+        CueKind.Scene => new SceneFeed(cue),
+        CueKind.CueShow => new CueShowFeed(cue),
         _ => new VectorFeed(cue)
     };
 }

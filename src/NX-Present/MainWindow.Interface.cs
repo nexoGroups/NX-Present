@@ -90,6 +90,11 @@ public partial class MainWindow
             key.IsProgram = key.Cue == programCue;
             key.IsPreview = previewCue != null && key.Cue == previewCue;
         }
+        foreach (var key in auxSourceKeys)
+        {
+            key.IsProgram = key.Cue == programCue;
+            key.IsPreview = previewCue != null && key.Cue == previewCue;
+        }
     }
 
     private void SyncTransport()
@@ -137,16 +142,25 @@ public partial class MainWindow
 
     private void NavigationChanged(object sender, RoutedEventArgs e)
     {
-        if (MixerPage == null || AuxPage == null || CueModePage == null || SettingsPage == null || HelpPage == null || PageTitle == null) return;
+        if (MixerPage == null || AuxPage == null || PoolPage == null || CueModePage == null || SettingsPage == null || HelpPage == null || PageTitle == null) return;
         string page = (sender as RadioButton)?.Tag as string ?? "mixer";
         MixerPage.Visibility = page == "mixer" ? Visibility.Visible : Visibility.Collapsed;
         AuxPage.Visibility = page == "aux" ? Visibility.Visible : Visibility.Collapsed;
+        PoolPage.Visibility = page == "pool" ? Visibility.Visible : Visibility.Collapsed;
         CueModePage.Visibility = page == "cues" ? Visibility.Visible : Visibility.Collapsed;
         SettingsPage.Visibility = page == "settings" ? Visibility.Visible : Visibility.Collapsed;
         HelpPage.Visibility = page == "help" ? Visibility.Visible : Visibility.Collapsed;
-        PageTitle.Text = page switch { "aux" => "AUX-Patcher", "cues" => "Cue-Ablauf", "settings" => "Setup", "help" => "Hilfe", _ => "Mischer" };
+        PageTitle.Text = page switch { "aux" => "AUX-Patcher", "pool" => "Medienpool", "cues" => "Cue-Ablauf", "settings" => "Setup", "help" => "Hilfe", _ => "Mischer" };
         if (!interfaceReady) return;
-        if (page == "aux") _ = RefreshCaptureSourcesAsync();
+        if (page == "aux")
+        {
+            _ = RefreshCaptureSourcesAsync();
+            RefreshAuxSourceView();
+        }
+        if (page == "pool")
+        {
+            RefreshPool();
+        }
         RefreshCueModeState();
     }
     private void OpenSettingsPage(object sender, RoutedEventArgs e) => SettingsNav.IsChecked = true;

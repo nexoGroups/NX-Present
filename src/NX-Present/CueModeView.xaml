@@ -52,7 +52,7 @@
     <TextBlock Text="Quellen" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"/>
     <Grid Grid.Row="1" Margin="0,0,0,8"><TextBox x:Name="SourceSearch" TextChanged="SourceSearchChanged" ToolTip="Medienpool durchsuchen" AutomationProperties.Name="Quellen für den Cue-Ablauf durchsuchen" Padding="26,5,8,5"/><TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="9,0,0,0" IsHitTestVisible="False"/><TextBlock Text="Suchen …" Margin="27,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Dim}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SourceSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
     <ListBox x:Name="SourceList" Grid.Row="2" SelectionChanged="SourceSelectionChanged" MouseDoubleClick="SourceDoubleClicked" ScrollViewer.VerticalScrollBarVisibility="Auto" VirtualizingPanel.IsVirtualizing="True" AutomationProperties.Name="Verfügbare Cue-Quellen"><ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold"/><TextBlock Text="{Binding Category}" Style="{StaticResource Eyebrow}" FontSize="9" Margin="0,3,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
-    <StackPanel Grid.Row="3" Margin="0,10,0,0"><Button x:Name="AddButton" Focusable="False" Content="+ Zum Ablauf" Click="AddClicked" Style="{StaticResource PrimaryButton}" IsEnabled="False" ToolTip="Die gewählte Quelle als Cue hinter der Marke einfügen (oder Doppelklick)"/><Button Content="Neue Inhalte im Mischer" Click="LibraryClicked" Style="{StaticResource QuietButton}" Margin="0,4,0,0" FontSize="11" ToolTip="Zur Seite Mischer wechseln"/></StackPanel>
+    <StackPanel Grid.Row="3" Margin="0,10,0,0"><Button x:Name="AddButton" Focusable="False" Content="+ Zum Ablauf" Click="AddClicked" Style="{StaticResource PrimaryButton}" IsEnabled="False" ToolTip="Die gewählte Quelle als Cue hinter der Marke einfügen (oder Doppelklick)"/><Button Content="Neue Inhalte im Medienpool" Click="LibraryClicked" Style="{StaticResource QuietButton}" Margin="0,4,0,0" FontSize="11" ToolTip="Zur Seite Medienpool wechseln"/></StackPanel>
    </Grid>
   </Border>
 
@@ -174,6 +174,32 @@
         <StackPanel Grid.Column="2"><TextBlock Text="Übergang" Style="{StaticResource Hint}" Margin="0,0,0,4"/><ComboBox x:Name="TransitionPicker" SelectedValue="{Binding Transition}" SelectedValuePath="Tag" AutomationProperties.Name="Übergang"><ComboBoxItem Content="Sofort" Tag="{x:Static local:TransitionKind.Cut}"/><ComboBoxItem Content="Überblenden" Tag="{x:Static local:TransitionKind.Dissolve}"/><ComboBoxItem Content="Über Schwarz" Tag="{x:Static local:TransitionKind.ThroughBlack}"/><ComboBoxItem Content="Wischen →" Tag="{x:Static local:TransitionKind.WipeHorizontal}"/><ComboBoxItem Content="Wischen ↓" Tag="{x:Static local:TransitionKind.WipeVertical}"/><ComboBoxItem Content="Iris" Tag="{x:Static local:TransitionKind.Iris}"/><ComboBoxItem Content="Schieben" Tag="{x:Static local:TransitionKind.Push}"/></ComboBox></StackPanel>
        </Grid>
        <TextBlock Text="Die Quelle wird beim Wechsel zur Marke vorgeladen, so startet GO ohne Verzögerung. Die Dauer des Übergangs stellst du im Reiter „Zeit und Weiter“ ein. Es läuft immer nur ein Übergang; weitere Cues warten, bis er fertig ist." Style="{StaticResource Hint}" FontSize="11" Margin="0,10,0,0"/>
+       <!-- Video Trimming (In- &amp; Out-Points) -->
+       <Border x:Name="VideoTrimPanel" Background="{StaticResource Inset}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="4" Padding="10,8" Margin="0,10,0,0">
+        <StackPanel>
+         <TextBlock Text="🎬 Video-Trimmen (Intros &amp; Outros herausschneiden)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,6"/>
+         <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <StackPanel>
+           <TextBlock Text="In-Punkt (Startzeit)" Style="{StaticResource Hint}" Margin="0,0,0,2"/>
+           <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBox x:Name="InPointBox" Height="26" VerticalContentAlignment="Center" Text="{Binding InPointText, Mode=OneWay}" LostFocus="InPointCommitted" KeyDown="InPointKeyDown" ToolTip="Startzeit des Videos, z. B. 00:15"/>
+            <Button Grid.Column="1" Content="◄ In setzen" Click="SetInPointFromCurrent" Style="{StaticResource QuietButton}" MinHeight="26" Padding="6,2" Margin="4,0,0,0" ToolTip="Setzt den In-Punkt auf die aktuelle Position im Vorschau-Monitor"/>
+           </Grid>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+           <TextBlock Text="Out-Punkt (Endzeit)" Style="{StaticResource Hint}" Margin="0,0,0,2"/>
+           <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBox x:Name="OutPointBox" Height="26" VerticalContentAlignment="Center" Text="{Binding OutPointText, Mode=OneWay}" LostFocus="OutPointCommitted" KeyDown="OutPointKeyDown" ToolTip="Stoppzeit des Videos, z. B. 02:40 (oder 0 für Dateiende)"/>
+            <Button Grid.Column="1" Content="Out setzen ►" Click="SetOutPointFromCurrent" Style="{StaticResource QuietButton}" MinHeight="26" Padding="6,2" Margin="4,0,0,0" ToolTip="Setzt den Out-Punkt auf die aktuelle Position im Vorschau-Monitor"/>
+           </Grid>
+          </StackPanel>
+          <Button Grid.Column="4" Content="✕ Reset" Click="ResetVideoTrim" Style="{StaticResource QuietButton}" VerticalAlignment="Bottom" MinHeight="26" Padding="8,2" ToolTip="Schnittmarken zurücksetzen (spielt gesamtes Video ab)"/>
+         </Grid>
+        </StackPanel>
+       </Border>
       </StackPanel>
       <StackPanel MaxWidth="560" HorizontalAlignment="Left"><StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Type}" Value="Black"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
        <TextBlock Text="Richtung" Style="{StaticResource Hint}" Margin="0,0,0,4"/>

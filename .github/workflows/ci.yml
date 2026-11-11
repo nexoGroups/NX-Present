@@ -1,10 +1,9 @@
 name: CI
 
-# Builds and checks every change. Releases are not built here: they come from the release routine in
-# .claude/skills/release (draft first, published only after an explicit yes).
+# Builds and packs changes without publishing release assets.
 on:
   push:
-    branches: [main]
+    branches: [main, 'release/**']
   pull_request:
 
 permissions:

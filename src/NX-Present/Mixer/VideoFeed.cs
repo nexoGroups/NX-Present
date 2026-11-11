@@ -39,6 +39,9 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     private volatile int readySlot = -1;
     private volatile bool released, copyPending, ended, playing, seekable, pauseOnFirstFrame;
     private long frames, copied, time, length;
+    private long inPointMs, outPointMs;
+    private int loopSeeking;
+    private long pendingSeek = -1;
     private int copyBudget;
     private int requestedVolume = -1, appliedVolume = -1;
     private volatile bool started;
@@ -59,6 +62,16 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     public long Time => Interlocked.Read(ref time);
     public long Length => Interlocked.Read(ref length);
     public bool CanSeek => seekable;
+    public long InPointMs
+    {
+        get => Interlocked.Read(ref inPointMs);
+        set => Interlocked.Exchange(ref inPointMs, Math.Max(0, value));
+    }
+    public long OutPointMs
+    {
+        get => Interlocked.Read(ref outPointMs);
+        set => Interlocked.Exchange(ref outPointMs, Math.Max(0, value));
+    }
     /// <summary>Number of decoded frames delivered so far.</summary>
     public long FramesDelivered => Interlocked.Read(ref frames);
     /// <summary>Number of pictures actually written to the shared bitmap. A paused picture is redrawn by VLC but not copied again.</summary>
@@ -111,8 +124,22 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         frame = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
         for (int i = 0; i < Slots; i++) ring[i] = Marshal.AllocHGlobal(pitch * lines);
 
-        var created = await Task.Run(() => new MediaPlayer(opened) { EnableHardwareDecoding = false }, cancellation);
-        if (IsDisposed) { _ = Task.Run(created.Dispose); return; }
+        MediaPlayer created;
+        try
+        {
+            created = await Task.Run(() => new MediaPlayer(opened) { EnableHardwareDecoding = false }, cancellation);
+        }
+        catch
+        {
+            FreeRingBuffers();
+            throw;
+        }
+        if (IsDisposed)
+        {
+            _ = Task.Run(created.Dispose);
+            FreeRingBuffers();
+            return;
+        }
         player = created;
         player.Mute = true;
         player.SetVideoFormatCallbacks(formatCallback, cleanupCallback);
@@ -128,7 +155,24 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
             firstFramePaused.TrySetException(new InvalidOperationException("Video konnte nicht wiedergegeben werden."));
             dispatcher.BeginInvoke(() => { if (State == FeedState.Ready) Fail("Video konnte nicht wiedergegeben werden."); });
         };
-        player.Playing += (_, _) => { playing = true; ended = false; };
+        player.Playing += (_, _) =>
+        {
+            playing = true;
+            ended = false;
+            long targetSeek = Interlocked.Exchange(ref pendingSeek, -1);
+            if (targetSeek >= 0)
+            {
+                Enqueue(() =>
+                {
+                    if (player != null && !released && player.IsSeekable)
+                    {
+                        player.Time = targetSeek;
+                        Interlocked.Exchange(ref time, targetSeek);
+                        AllowCopy(12);
+                    }
+                });
+            }
+        };
         player.Paused += (_, _) =>
         {
             playing = false;
@@ -136,7 +180,55 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
             if (readySlot >= 0) firstFramePaused.TrySetResult(true);
         };
         player.Stopped += (_, _) => { playing = false; AllowCopy(); };
-        player.TimeChanged += (_, e) => Interlocked.Exchange(ref time, e.Time);
+        player.TimeChanged += (_, e) =>
+        {
+            Interlocked.Exchange(ref time, e.Time);
+            long outMs = OutPointMs;
+            long inMs = InPointMs;
+            if (outMs > 0 && outMs > inMs && e.Time >= outMs && !ended)
+            {
+                if (Loop)
+                {
+                    if (Interlocked.CompareExchange(ref loopSeeking, 1, 0) == 0)
+                    {
+                        Enqueue(() =>
+                        {
+                            try
+                            {
+                                if (player != null && !released && player.IsSeekable)
+                                {
+                                    player.Time = inMs;
+                                    Interlocked.Exchange(ref time, inMs);
+                                    AllowCopy(12);
+                                }
+                            }
+                            finally
+                            {
+                                Interlocked.Exchange(ref loopSeeking, 0);
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    ended = true;
+                    playing = false;
+                    AllowCopy();
+                    Enqueue(() =>
+                    {
+                        if (player != null && !released)
+                        {
+                            player.SetPause(true);
+                            if (player.IsSeekable)
+                            {
+                                player.Time = outMs;
+                                Interlocked.Exchange(ref time, outMs);
+                            }
+                        }
+                    });
+                }
+            }
+        };
         player.LengthChanged += (_, e) => Interlocked.Exchange(ref length, e.Length);
         player.SeekableChanged += (_, e) => seekable = e.Seekable != 0;
 
@@ -169,9 +261,12 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     }
     private IntPtr LockFrame(IntPtr opaque, IntPtr planes)
     {
+        if (released) return IntPtr.Zero;
         // Rotate through three buffers so the UI can copy a finished frame while the next one is decoded.
         int slot = (readySlot + 1) % Slots;
-        Marshal.WriteIntPtr(planes, ring[slot]);
+        IntPtr ptr = ring[slot];
+        if (ptr == IntPtr.Zero) return IntPtr.Zero;
+        Marshal.WriteIntPtr(planes, ptr);
         return new IntPtr(slot + 1);
     }
     private void ShowFrame(IntPtr opaque, IntPtr picture)
@@ -210,6 +305,11 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         ended = false;
         AllowCopy(12);
         pauseOnFirstFrame = cueFirstFrame;
+        long inMs = InPointMs;
+        if (inMs > 0)
+        {
+            Interlocked.Exchange(ref pendingSeek, inMs);
+        }
         player.Play();
     }
     private void AllowCopy(int pictures = 3) => Volatile.Write(ref copyBudget, pictures);
@@ -217,10 +317,12 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     // ---- serial command queue: VLC calls never run on the UI thread ----
     private void Enqueue(Action action)
     {
+        if (released) return;
         lock (queueLock)
         {
             queue = queue.ContinueWith(_ =>
             {
+                if (released) return;
                 try { action(); }
                 catch (Exception ex) { App.Log(ex); }
             }, TaskScheduler.Default);
@@ -233,7 +335,20 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     {
         if (!started)
         {
-            Enqueue(() => { if (!ended) player?.SetPause(true); });
+            Enqueue(() =>
+            {
+                if (!ended)
+                {
+                    player?.SetPause(true);
+                    long inMs = InPointMs;
+                    if (inMs > 0 && player?.IsSeekable == true)
+                    {
+                        player.Time = inMs;
+                        Interlocked.Exchange(ref time, inMs);
+                        AllowCopy(12);
+                    }
+                }
+            });
             return;
         }
         started = false;
@@ -242,14 +357,23 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
             if (player == null || released) return;
             // Stop the decoder before arming the callback so an old frame cannot consume the pause.
             Replay(cueFirstFrame: true);
-            Interlocked.Exchange(ref time, 0);
+            Interlocked.Exchange(ref time, InPointMs);
         });
     }
     public override void Start()
     {
         if (started) return;
         started = true;
-        Enqueue(() => { pauseOnFirstFrame = false; player?.SetPause(false); });
+        Enqueue(() =>
+        {
+            pauseOnFirstFrame = false;
+            long inMs = InPointMs;
+            if (inMs > 0 && player != null && player.IsSeekable && player.Time < inMs)
+            {
+                player.Time = inMs;
+            }
+            player?.SetPause(false);
+        });
     }
     public override void ApplyGain(double gain)
     {
@@ -275,6 +399,11 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
         {
             pauseOnFirstFrame = false;
             if (player == null) return;
+            long inMs = InPointMs;
+            if (inMs > 0 && player.IsSeekable && player.Time < inMs)
+            {
+                player.Time = inMs;
+            }
             if (ended) Replay(); else player.SetPause(false);
         });
     }
@@ -287,7 +416,8 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
             pauseOnFirstFrame = false;
             if (player == null) return;
             if (ended) { Replay(); return; }
-            if (player.IsSeekable) player.Time = 0;
+            long inMs = InPointMs;
+            if (player.IsSeekable) player.Time = inMs;
             player.SetPause(false);
         });
     }
@@ -302,6 +432,7 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
     protected override void Release()
     {
         released = true;
+        frame = null;
         var ownPlayer = player;
         var ownMedia = media;
         player = null; media = null;
@@ -315,14 +446,23 @@ public sealed class VideoFeed : SourceFeed, ITransportFeed
                 try { ownPlayer?.Stop(); } catch (Exception ex) { App.Log(ex); }
                 try { ownPlayer?.Dispose(); } catch (Exception ex) { App.Log(ex); }
                 try { ownMedia?.Dispose(); } catch (Exception ex) { App.Log(ex); }
-                dispatcher.BeginInvoke(() =>
-                {
-                    for (int i = 0; i < Slots; i++) { if (ring[i] != IntPtr.Zero) Marshal.FreeHGlobal(ring[i]); ring[i] = IntPtr.Zero; }
-                });
+                dispatcher.InvokeAsync(FreeRingBuffers, DispatcherPriority.Normal);
             }, TaskScheduler.Default);
         }
         lock (Disposals) { Disposals.RemoveAll(x => x.IsCompleted); Disposals.Add(disposal); }
         firstFramePaused.TrySetCanceled();
+    }
+
+    private void FreeRingBuffers()
+    {
+        for (int i = 0; i < Slots; i++)
+        {
+            if (ring[i] != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(ring[i]);
+                ring[i] = IntPtr.Zero;
+            }
+        }
     }
 
     /// <summary>Waits until released players are really gone, so the video engine can shut down without live players.</summary>

@@ -32,6 +32,8 @@ public partial class MainWindow
         (string Name, string Id)[] patterns = [("Farbbalken", "bars"), ("Raster und Ausrichtung", "grid"), ("Graustufen", "gray"), ("Schachbrett", "checker"), ("Weiß", "white"), ("Rot", "red"), ("Grün", "green"), ("Blau", "blue"), ("Schwarz", "black"), ("NX-Present Startbild", "logo")];
         foreach (var p in patterns) cues.Add(new Cue(CueKind.Pattern, p.Name, p.Id));
         cues.Add(new Cue(CueKind.Clock, "Uhr", "local"));
+        cues.Add(new Cue(CueKind.Scene, "Pre-Show: Musik & Uhr", SceneModel.CreatePreShowTemplate().ToJson()));
+        cues.Add(new Cue(CueKind.Scene, "Song & Vinyl (ohne Uhr)", SceneModel.CreateMinimalSongTemplate().ToJson()));
     }
 
     /// <summary>Keeps the cards of the media pool in step with the library, reusing the existing ones.</summary>
@@ -81,16 +83,19 @@ public partial class MainWindow
 
     private async void PoolCardClicked(object sender, RoutedEventArgs e)
     {
-        if (((FrameworkElement)sender).DataContext is BusKey key) await SelectStandby(key.Cue);
+        try { if (((FrameworkElement)sender).DataContext is BusKey key) await SelectStandby(key.Cue); }
+        catch (Exception ex) { App.Log(ex); Status($"Auswahl fehlgeschlagen: {ex.Message}"); }
     }
     private static BusKey? KeyOf(object sender) => ((sender as MenuItem)?.Parent as ContextMenu)?.PlacementTarget is FrameworkElement { DataContext: BusKey key } ? key : null;
     private async void PoolPreviewClicked(object sender, RoutedEventArgs e)
     {
-        if (KeyOf(sender) is BusKey key) await SelectStandby(key.Cue);
+        try { if (KeyOf(sender) is BusKey key) await SelectStandby(key.Cue); }
+        catch (Exception ex) { App.Log(ex); Status($"Vorschau fehlgeschlagen: {ex.Message}"); }
     }
     private async void PoolCutClicked(object sender, RoutedEventArgs e)
     {
-        if (KeyOf(sender) is BusKey key) await HotCut(key.Cue);
+        try { if (KeyOf(sender) is BusKey key) await HotCut(key.Cue); }
+        catch (Exception ex) { App.Log(ex); Status($"Schnitt fehlgeschlagen: {ex.Message}"); }
     }
     private void PoolRemoveClicked(object sender, RoutedEventArgs e)
     {
@@ -138,6 +143,39 @@ public partial class MainWindow
         AddCue(new Cue(CueKind.Text, text.Length > 45 ? text[..45] + "…" : text, text));
     }
     private void AddClock(object sender, RoutedEventArgs e) => AddCue(new Cue(CueKind.Clock, "Uhr", "local"));
+    private void AddScene(object sender, RoutedEventArgs e)
+    {
+        var editor = new SceneEditorWindow { Owner = this };
+        if (editor.ShowDialog() == true)
+        {
+            var cue = new Cue(CueKind.Scene, editor.ResultModel.Name, editor.ResultModel.ToJson());
+            if (editor.TargetAuxChannel is { } targetNum)
+            {
+                var targetChannel = auxChannels.FirstOrDefault(ch => ch.Number == targetNum);
+                if (targetChannel != null)
+                {
+                    var key = new BusKey(cue);
+                    key.RequestThumbnail();
+                    RouteAux(targetChannel, key);
+                }
+            }
+            AddCue(cue);
+        }
+    }
+    private void AddWindowCapture(object sender, RoutedEventArgs e)
+    {
+        var windows = WindowCaptureFeed.FindWindows();
+        if (windows.Count == 0)
+        {
+            MessageBox.Show(this, "Es wurden keine offenen Anwendungsfenster gefunden.", "Anwendung erfassen", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        var picker = new WindowPickerWindow(windows) { Owner = this };
+        if (picker.ShowDialog() == true && picker.SelectedWindow != null)
+        {
+            AddCue(picker.SelectedWindow);
+        }
+    }
     private void AddCue(Cue cue)
     {
         cues.Add(cue);
@@ -163,7 +201,7 @@ public partial class MainWindow
     private void SaveShow(object sender, RoutedEventArgs e) => SaveCurrentShow(true);
     private bool ConfirmUnsaved()
     {
-        if (!dirty || loadingShow) return true;
+        if (!dirty || loadingShow || isolated) return true;
         var result = MessageBox.Show(this, "Änderungen an Medienpool, Cue-Ablauf und AUX-Belegung speichern?", "NX-Present", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         return result == MessageBoxResult.No || (result == MessageBoxResult.Yes && SaveCurrentShow(false));
     }

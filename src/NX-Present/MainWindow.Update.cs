@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Velopack;
 
 namespace NXPresent;
 
@@ -18,11 +19,11 @@ public partial class MainWindow
     private CancellationTokenSource? updateWork;
     private bool updateBusy;
     private string? updateAttempt;
-    private Version? failedUpdate;
+    private SemanticVersion? failedUpdate;
 
     private void InitializeUpdates()
     {
-        UpdateVersionText.Text = UpdateService.CurrentVersion.ToString(3);
+        UpdateVersionText.Text = UpdateService.CurrentVersion.ToString();
         updateAttempt = savedSettings.UpdateAttempt;
         if (isolated)
         {
@@ -34,11 +35,11 @@ public partial class MainWindow
         if (!updater.IsInstalled) UpdateStatusText.Text = "Diese Kopie wurde nicht über das Setup installiert. Updates gibt es nur für die installierte Fassung.";
         if (updateAttempt != null)
         {
-            if (UpdateService.TryParseVersion(updateAttempt, out var attempted) && attempted > UpdateService.CurrentVersion)
+            if (UpdateService.TryParseVersion(updateAttempt, out var attempted) && UpdateService.CanOffer(UpdateService.CurrentVersion, attempted))
             {
                 failedUpdate = attempted;
-                UpdateStatusText.Text = "Das letzte Update auf Version " + attempted.ToString(3) + " wurde nicht abgeschlossen. Es wird nicht automatisch wiederholt. Protokoll: %LOCALAPPDATA%\\NXPresent\\velopack.log";
-                Status("Das letzte Update auf Version " + attempted.ToString(3) + " wurde nicht abgeschlossen. Details unter Setup.");
+                UpdateStatusText.Text = "Das letzte Update auf Version " + attempted + " wurde nicht abgeschlossen. Es wird nicht automatisch wiederholt. Protokoll: %LOCALAPPDATA%\\NXPresent\\velopack.log";
+                Status("Das letzte Update auf Version " + attempted + " wurde nicht abgeschlossen. Details unter Setup.");
             }
             else updateAttempt = null;
         }
@@ -56,7 +57,7 @@ public partial class MainWindow
             if (closing) return;
             var result = await CheckForUpdateAsync(manual: false);
             if (result?.Offer is not UpdateOffer offer) return;
-            string version = offer.Version.ToString(3);
+            string version = offer.Version.ToString();
             if (AutoInstallUpdates.IsChecked != true) { Status("Update " + version + " ist verfügbar. Installieren unter Setup."); return; }
             if (failedUpdate != null && offer.Version <= failedUpdate) { Status("Update " + version + " ist verfügbar, der letzte Versuch schlug aber fehl. Installieren unter Setup."); return; }
             if (!UpdateIsSafe) { Status("Update " + version + " ist verfügbar. Es wird nicht automatisch installiert, weil gerade Inhalt läuft. Installieren unter Setup."); return; }
@@ -68,7 +69,7 @@ public partial class MainWindow
     private void ShowUpdateBadge()
     {
         if (offeredUpdate == null) { UpdateBadge.Visibility = Visibility.Collapsed; return; }
-        string version = offeredUpdate.Version.ToString(3);
+        string version = offeredUpdate.Version.ToString();
         UpdateBadge.Content = "UPDATE " + version;
         UpdateBadge.ToolTip = "Version " + version + " ist verfügbar. Klick öffnet Setup.";
         UpdateBadge.Visibility = Visibility.Visible;
@@ -100,7 +101,7 @@ public partial class MainWindow
         BeginUpdateWork("Suche nach Updates …");
         try
         {
-            var result = await updater.CheckAsync(UpdateService.CurrentVersion, updateWork!.Token);
+            var result = await updater.CheckAsync(updateWork!.Token);
             if (closing) return null;
             offeredUpdate = result.Offer;
             UpdateStatusText.Text = result.Message;
@@ -108,7 +109,7 @@ public partial class MainWindow
             {
                 InstallUpdateButton.Visibility = Visibility.Visible;
                 UpdateNotesButton.Visibility = Visibility.Visible;
-                if (manual) Status("Update " + offer.Version.ToString(3) + " ist verfügbar.");
+                if (manual) Status("Update " + offer.Version + " ist verfügbar.");
             }
             else
             {
@@ -136,7 +137,7 @@ public partial class MainWindow
     {
         if (updater == null || updateBusy || closing) return;
         if (!updater.IsInstalled) { UpdateStatusText.Text = "Diese Kopie wurde nicht über das Setup installiert. Lade das Setup von der Veröffentlichungsseite."; return; }
-        string version = offer.Version.ToString(3);
+        string version = offer.Version.ToString();
         BeginUpdateWork("Version " + version + " wird geladen …");
         UpdateProgress.Value = 0;
         UpdateProgress.Visibility = Visibility.Visible;
@@ -191,7 +192,7 @@ public partial class MainWindow
     /// <summary>Hands over to the updater: it waits for this process, installs the new version and starts it.</summary>
     private void ApplyUpdate(UpdateOffer offer)
     {
-        string version = offer.Version.ToString(3);
+        string version = offer.Version.ToString();
         string? previousAttempt = updateAttempt;
         updateAttempt = version;
         SaveSettings();
