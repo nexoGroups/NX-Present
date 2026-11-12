@@ -9,10 +9,49 @@
  <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="36" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
  <Window.Resources>
   <BooleanToVisibilityConverter x:Key="ShowWhenChecked"/>
+
+  <!-- Industrial Horizontal Resize Grip Template -->
+  <ControlTemplate x:Key="HorizontalGripTemplate" TargetType="Thumb">
+   <Border x:Name="GripBar" Background="Transparent" Height="8" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+     <Rectangle Width="20" Height="2" Fill="{StaticResource IndustrialSteel}" Margin="2,0" RadiusX="1" RadiusY="1"/>
+     <Rectangle Width="20" Height="2" Fill="{StaticResource IndustrialSteel}" Margin="2,0" RadiusX="1" RadiusY="1"/>
+     <Rectangle Width="20" Height="2" Fill="{StaticResource IndustrialSteel}" Margin="2,0" RadiusX="1" RadiusY="1"/>
+    </StackPanel>
+   </Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True">
+     <Setter TargetName="GripBar" Property="Background" Value="#2206B6D4"/>
+    </Trigger>
+    <Trigger Property="IsDragging" Value="True">
+     <Setter TargetName="GripBar" Property="Background" Value="#4406B6D4"/>
+    </Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate>
+
+  <!-- Industrial Vertical Resize Grip Template -->
+  <ControlTemplate x:Key="VerticalGripTemplate" TargetType="Thumb">
+   <Border x:Name="GripBar" Background="Transparent" Width="8" HorizontalAlignment="Center" VerticalAlignment="Stretch">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+     <Rectangle Width="2" Height="20" Fill="{StaticResource IndustrialSteel}" Margin="0,2" RadiusX="1" RadiusY="1"/>
+     <Rectangle Width="2" Height="20" Fill="{StaticResource IndustrialSteel}" Margin="0,2" RadiusX="1" RadiusY="1"/>
+     <Rectangle Width="2" Height="20" Fill="{StaticResource IndustrialSteel}" Margin="0,2" RadiusX="1" RadiusY="1"/>
+    </StackPanel>
+   </Border>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsMouseOver" Value="True">
+     <Setter TargetName="GripBar" Property="Background" Value="#2206B6D4"/>
+    </Trigger>
+    <Trigger Property="IsDragging" Value="True">
+     <Setter TargetName="GripBar" Property="Background" Value="#4406B6D4"/>
+    </Trigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate>
+
   <!-- A card in the media pool. -->
   <Style x:Key="PoolCard" TargetType="Button">
    <Setter Property="Focusable" Value="False"/><Setter Property="Width" Value="108"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{StaticResource Ink}"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="2">
     <StackPanel>
      <Grid Height="52" Margin="0,0,0,0" Background="{StaticResource Inset}">
       <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
@@ -39,7 +78,7 @@
    <Setter Property="Template">
     <Setter.Value>
      <ControlTemplate TargetType="Button">
-      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="2">
        <Grid>
         <Grid.RowDefinitions>
          <RowDefinition Height="66"/>
@@ -99,7 +138,7 @@
    <Setter Property="Template">
     <Setter.Value>
      <ControlTemplate TargetType="Button">
-      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="4">
+      <Border x:Name="Frame" Background="{StaticResource Raised}" BorderBrush="{StaticResource Line}" BorderThickness="2" CornerRadius="2">
        <Grid>
         <Grid.RowDefinitions>
          <RowDefinition Height="64"/>
@@ -171,8 +210,15 @@
   <!-- Title bar. WindowChrome keeps native move, resize and snap. -->
   <Border Background="{StaticResource Chrome}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
    <Grid Margin="14,0,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="NX" Foreground="{StaticResource Accent}" FontWeight="Black" FontStyle="Italic" FontSize="17"/><TextBlock Text="PRESENT" FontWeight="SemiBold" FontSize="11" Margin="7,2,0,0" VerticalAlignment="Center"/><TextBlock x:Name="PageTitle" Text="Mischer" Style="{StaticResource Eyebrow}" FontSize="11" Margin="18,2,0,0" VerticalAlignment="Center"/></StackPanel>
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+     <TextBlock Text="NX" Foreground="{StaticResource Accent}" FontWeight="Black" FontStyle="Italic" FontSize="17"/>
+     <TextBlock Text="PRESENT" FontWeight="SemiBold" FontSize="11" Margin="7,2,0,0" VerticalAlignment="Center"/>
+     <Border Style="{StaticResource IndustrialBadge}" Margin="16,0,0,0" VerticalAlignment="Center">
+      <TextBlock x:Name="PageTitle" Text="Mischer" Style="{StaticResource Eyebrow}" FontFamily="{StaticResource NxMono}" FontSize="10" Foreground="{StaticResource Ink}"/>
+     </Border>
+    </StackPanel>
     <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+     <ToggleButton x:Name="LayoutEditToggle" Content="📐 Layout" Visibility="{Binding Visibility, ElementName=MixerPage}" Margin="0,4,8,4" MinHeight="26" Padding="10,3" Focusable="False" ToolTip="Bearbeitungsmodus: Containergröße anpassen und skalieren" Checked="LayoutEditToggle_Click" Unchecked="LayoutEditToggle_Click" Click="LayoutEditToggle_Click"/>
      <ToggleButton x:Name="InspectorToggle" Content="Optionen" Visibility="{Binding Visibility, ElementName=MixerPage}" Margin="0,4,8,4" MinHeight="26" Padding="10,3" Focusable="False" ToolTip="Audio, Bild und Optionen für das inaktive ME"/>
      <Button x:Name="OutputToggleButton" Content="Ausgabe starten" Style="{StaticResource PrimaryButton}" Margin="0,4,8,4" MinHeight="26" Padding="10,3" Focusable="False" Click="ToggleOutput"/>
      <Button Click="OpenSettingsPage" Style="{StaticResource QuietButton}" MinHeight="0" Padding="10,0" Margin="0,0,10,0" ToolTip="Ausgabe und Geräte einrichten" Focusable="False"><StackPanel Orientation="Horizontal"><Ellipse x:Name="OutputDot" Width="7" Height="7" Fill="{StaticResource Dim}" Margin="0,0,7,0"/><TextBlock x:Name="OutputBadge" Text="AUSGABE AUS" FontFamily="Consolas" FontSize="11"/></StackPanel></Button>
@@ -186,18 +232,65 @@
 
   <Grid Grid.Row="1">
    <!-- ============ MIXER (NORMAL MODUS - OHNE MEDIENPOOL) ============ -->
-   <Grid x:Name="MixerPage" Margin="12,12,12,8">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <Grid x:Name="MixerPage" Margin="12,12,12,8" Background="Transparent" MouseDown="MixerBackground_MouseDown">
+    <Grid.ColumnDefinitions>
+     <ColumnDefinition Width="*"/>
+     <ColumnDefinition Width="Auto"/>
+     <ColumnDefinition Width="Auto"/>
+    </Grid.ColumnDefinitions>
     <Grid>
-     <Grid.RowDefinitions><RowDefinition Height="*" MinHeight="238"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-     <Grid Margin="0,0,0,8">
+     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*" MinHeight="238"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+     </Grid.RowDefinitions>
+
+     <!-- Layout Edit Banner (visible when IsLayoutEditMode is True) -->
+     <Border x:Name="LayoutEditBanner" Margin="0,0,0,8" Padding="10,6"
+             Background="{StaticResource Chrome}" BorderBrush="{StaticResource IndustrialCyan}" BorderThickness="1" CornerRadius="2">
+      <Border.Style>
+       <Style TargetType="Border">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+         <DataTrigger Binding="{Binding Path=IsLayoutEditMode, RelativeSource={RelativeSource AncestorType=local:MainWindow}}" Value="True">
+          <Setter Property="Visibility" Value="Visible"/>
+         </DataTrigger>
+        </Style.Triggers>
+       </Style>
+      </Border.Style>
+      <Grid>
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+       </Grid.ColumnDefinitions>
+       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Border Background="{StaticResource IndustrialCyan}" CornerRadius="2" Padding="6,2" Margin="0,0,10,0">
+         <TextBlock Text="LAYOUT-MODUS" Foreground="Black" FontWeight="Bold" FontSize="10" FontFamily="{StaticResource NxMono}"/>
+        </Border>
+        <TextBlock Text="Container skalieren (↕ AUX-Module, ↔ Optionen) oder Voreinstellungen wählen:"
+                   Foreground="{StaticResource Ink}" FontSize="11" VerticalAlignment="Center"/>
+       </StackPanel>
+       <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock Text="AUX-HÖHE:" Style="{StaticResource Eyebrow}" FontFamily="{StaticResource NxMono}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <Button Content="S · 42px" Click="SetAuxSmall_Click" MinHeight="24" Padding="8,2" Margin="0,0,4,0" ToolTip="Standardhöhe (42 px)"/>
+        <Button Content="M · 70px" Click="SetAuxMedium_Click" MinHeight="24" Padding="8,2" Margin="0,0,4,0" ToolTip="Mittlere Höhe (70 px)"/>
+        <Button Content="L · 100px" Click="SetAuxLarge_Click" MinHeight="24" Padding="8,2" Margin="0,0,10,0" ToolTip="Große Höhe (100 px)"/>
+        <Button Content="↺ Standard" Click="ResetLayout_Click" MinHeight="24" Padding="10,2" Margin="0,0,8,0" ToolTip="Layout auf Werkseinstellung zurücksetzen"/>
+        <Button Content="✓ Fertig" Style="{StaticResource PrimaryButton}" Click="FinishLayoutEdit_Click" MinHeight="24" Padding="12,2" ToolTip="Layout sichern und Modus beenden"/>
+       </StackPanel>
+      </Grid>
+     </Border>
+
+     <Grid Grid.Row="1" Margin="0,0,0,8">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <local:MonitorView x:Name="Me1Monitor" Mode="Me1" Heading="ME1"/>
       <local:MonitorView x:Name="Me2Monitor" Grid.Column="2" Mode="Me2" Heading="ME2"/>
      </Grid>
 
      <!-- Transition controls stay together between the monitors and source buses. -->
-     <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="12,6">
+     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Margin="0,0,0,8" Padding="12,6">
       <Grid>
        <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="150"/>
@@ -230,40 +323,73 @@
       </Grid>
      </Border>
 
-     <!-- AUX channels strip in normal mode -->
-     <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="8,7">
-      <ItemsControl x:Name="AuxTiles" Focusable="False">
-       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-       <ItemsControl.ItemTemplate>
-        <DataTemplate>
-         <Button Margin="3,0" Padding="0" Click="AuxClicked" AutomationProperties.Name="{Binding Name}" MinWidth="0"
-                 HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                 ToolTip="{Binding Source.ThumbnailError, TargetNullValue='Ins inaktive ME laden'}">
-          <Grid ClipToBounds="True">
-           <Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-           <Grid Background="Black">
-            <TextBlock Text="{Binding Source.Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Dim}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center">
-             <TextBlock.Style>
-              <Style TargetType="TextBlock">
-               <Style.Triggers><DataTrigger Binding="{Binding Source.HasThumbnail}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
-              </Style>
-             </TextBlock.Style>
-            </TextBlock>
-            <Image Source="{Binding Source.Thumbnail}" Stretch="Uniform"/>
+     <!-- AUX channels strip in normal mode with resize handle -->
+     <Grid Grid.Row="3">
+      <Grid.RowDefinitions>
+       <RowDefinition Height="Auto"/>
+       <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <!-- Industrial Horizontal Resize Grip Thumb -->
+      <Thumb x:Name="AuxResizeThumb" Height="8" Margin="0,0,0,2" Cursor="SizeNS"
+             DragDelta="AuxResizeThumb_DragDelta" Template="{StaticResource HorizontalGripTemplate}"
+             ToolTip="Ziehen: AUX-Modulhöhe anpassen"/>
+      <Border Grid.Row="1" x:Name="AuxContainerBorder" Padding="8,7">
+       <Border.Style>
+        <Style TargetType="Border" BasedOn="{StaticResource PanelBorder}">
+         <Style.Triggers>
+          <DataTrigger Binding="{Binding Path=IsLayoutEditMode, RelativeSource={RelativeSource AncestorType=local:MainWindow}}" Value="True">
+           <Setter Property="BorderBrush" Value="{StaticResource IndustrialCyan}"/>
+           <Setter Property="BorderThickness" Value="1"/>
+           <Setter Property="Background" Value="#0A06B6D4"/>
+          </DataTrigger>
+         </Style.Triggers>
+        </Style>
+       </Border.Style>
+       <ItemsControl x:Name="AuxTiles" Focusable="False">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+         <DataTemplate>
+          <Button Margin="3,0" Padding="0" Click="AuxClicked" AutomationProperties.Name="{Binding Name}" MinWidth="0"
+                  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                  ToolTip="{Binding Source.ThumbnailError, TargetNullValue='Ins inaktive ME laden'}">
+           <Grid ClipToBounds="True">
+            <Grid.RowDefinitions>
+             <RowDefinition Height="{Binding Path=CurrentAuxThumbnailHeight, RelativeSource={RelativeSource AncestorType=local:MainWindow}}"/>
+             <RowDefinition Height="Auto"/>
+             <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid Background="Black">
+             <TextBlock Text="{Binding Source.Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Dim}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock.Style>
+               <Style TargetType="TextBlock">
+                <Style.Triggers><DataTrigger Binding="{Binding Source.HasThumbnail}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+               </Style>
+              </TextBlock.Style>
+             </TextBlock>
+             <Image Source="{Binding Source.Thumbnail}" Stretch="Uniform"/>
+            </Grid>
+            <TextBlock Grid.Row="1" Text="{Binding Name}" FontFamily="{StaticResource NxMono}" FontWeight="SemiBold" FontSize="11" Margin="5,3,5,0" TextTrimming="CharacterEllipsis"/>
+            <TextBlock Grid.Row="2" Text="{Binding Source.Name}" Foreground="{StaticResource Muted}" FontSize="10" Margin="5,1,5,3" TextTrimming="CharacterEllipsis"/>
            </Grid>
-           <TextBlock Grid.Row="1" Text="{Binding Name}" FontWeight="SemiBold" FontSize="11" Margin="5,3,5,0" TextTrimming="CharacterEllipsis"/>
-           <TextBlock Grid.Row="2" Text="{Binding Source.Name}" Foreground="{StaticResource Muted}" FontSize="10" Margin="5,1,5,3" TextTrimming="CharacterEllipsis"/>
-          </Grid>
-         </Button>
-        </DataTemplate>
-       </ItemsControl.ItemTemplate>
-      </ItemsControl>
-     </Border>
+          </Button>
+         </DataTemplate>
+        </ItemsControl.ItemTemplate>
+       </ItemsControl>
+      </Border>
+     </Grid>
     </Grid>
 
+    <!-- Vertical Splitter Grip for Inspector -->
+    <Thumb x:Name="InspectorResizeThumb" Grid.Column="1" Width="8" Margin="8,0,0,0" Cursor="SizeWE"
+           DragDelta="InspectorResizeThumb_DragDelta" Template="{StaticResource VerticalGripTemplate}"
+           ToolTip="Ziehen: Options-Breite anpassen"
+           Visibility="{Binding Visibility, ElementName=InspectorPanel}"/>
+
     <!-- Inspector -->
-    <ScrollViewer x:Name="InspectorPanel" Grid.Column="1" Width="246" Margin="12,0,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False"
+    <ScrollViewer x:Name="InspectorPanel" Grid.Column="2"
+                  Width="{Binding Path=InspectorPanelWidth, RelativeSource={RelativeSource AncestorType=local:MainWindow}}"
+                  Margin="4,0,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False"
                   Visibility="{Binding IsChecked, ElementName=InspectorToggle, Converter={StaticResource ShowWhenChecked}}">
      <StackPanel Margin="0,0,0,2">
       <Border Style="{StaticResource PanelBorder}" Padding="14,12" Margin="0,0,0,8"><StackPanel>
@@ -316,13 +442,13 @@
        </Grid.ColumnDefinitions>
        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
         <TextBlock Text="AUX-AUSGÄNGE" Style="{StaticResource SectionTitle}" Margin="0,0,8,0"/>
-        <Border Background="{StaticResource Raised}" CornerRadius="3" Padding="6,2" VerticalAlignment="Center">
+        <Border Background="{StaticResource Raised}" CornerRadius="2" Padding="6,2" VerticalAlignment="Center">
          <TextBlock x:Name="AuxOutputsCount" Text="10 KANÄLE" Style="{StaticResource Eyebrow}" FontSize="9"/>
         </Border>
        </StackPanel>
        <TextBlock Grid.Column="1" Text="Klicke auf einen AUX-Kanal, um ihn für das Routing auszuwählen." Style="{StaticResource Hint}" FontSize="11" VerticalAlignment="Center" Margin="14,0,0,0"/>
        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-        <Border Background="{StaticResource Chrome}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="3" Padding="10,3" VerticalAlignment="Center">
+        <Border Background="{StaticResource Chrome}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="2" Padding="10,3" VerticalAlignment="Center">
          <TextBlock x:Name="SelectedAuxTargetHeader" Text="Aktives Routing-Ziel: AUX 1" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource AccentText}"/>
         </Border>
         <Button Content="🎬 OBS-Szeneneditor" Style="{StaticResource PrimaryButton}" MinHeight="26" Padding="10,2" Margin="8,0,0,0" Click="EditCurrentAuxScene" ToolTip="Öffnet den OBS-Szeneneditor für den ausgewählten AUX-Kanal"/>

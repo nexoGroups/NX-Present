@@ -1,5 +1,20 @@
 # Änderungen
 
+## 0.7.0-beta.2 – Skalierbares Layout und Industrielles Design
+
+- **Dynamische Größenanpassung der Container (Resizable Layout):** Alle Hauptmodule lassen sich flexibel in ihrer Größe anpassen.
+  - Das AUX-Modul lässt sich über einen horizontalen Studio-Anfasser von 32 px bis 180 px frei in der Höhe skalieren.
+  - Das Optionen-Panel (Inspector) verfügt über einen vertikalen Splitter-Anfasser zur stufenlosen Breitenanpassung (200 px bis 500 px).
+  - Ein Klick in den Leerbereich des Mischers oder auf den Schalter **📐 Layout** aktiviert den Bearbeitungsmodus mit optischen cyanfarbenen Begrenzungsrahmen.
+  - Voreinstellungen für die AUX-Höhe (S · 42px, M · 70px, L · 100px) und ein Schalter zum Zurücksetzen auf den Standard erlauben schnelles Umschalten.
+  - Das angepasste Layout wird lokal auf dem Gerät gespeichert und bleibt beim nächsten Programmstart erhalten.
+- **Dezenter technischer Eckenradius:** Weiche Rundungen wurden durch präzise 2 px bis 3 px Radien ersetzt (Karten, Eingaben, Buttons, Tally-Lampen und T-Bar-Faderknauf).
+- **Industrieller Studio- und Broadcast-Look:**
+  - Tiefere Anthrazittöne mit sichtbaren 1px-Präzisionsrahmen statt weicher Schatten.
+  - Funktionale Farbkodierung für Bearbeitung (Cyan), Warnung (Amber), Program (Tally Rot) und Preview (Grün).
+  - Monospace-Typografie (`Consolas` / `NxMono`) für AUX-Kanalbezeichnungen, Messwerte, Badges und Zeitcodes.
+  - Der T-Bar-Überblender besitzt geriffelte vertikale Grifflinien für eine taktile Broadcast-Fader-Optik.
+
 ## 0.7.0-beta.1 – Szenen, Fensteraufnahme und Cue Mode
 
 - Im Szeneneditor kombinierst du Bilder, Text, Uhr und Countdown auf einer 16:9-Fläche. Vorlagen für Pre-Show, Song-Anzeige und Bauchbinden dienen als Ausgangspunkt. Szenen lassen sich im Medienpool ablegen oder einem AUX-Kanal zuweisen.

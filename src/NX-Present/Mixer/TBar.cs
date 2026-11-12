@@ -27,9 +27,9 @@ public sealed class TBar : FrameworkElement
         if (w <= Inset * 2) return;
         double left = Inset, right = w - Inset, x = left + Value * (right - left);
         var groove = new Rect(left, mid - 4, right - left, 8);
-        dc.DrawRoundedRectangle(ThemeBrush("Inset"), new Pen(ThemeBrush("LineStrong"), 1), groove, 4, 4);
+        dc.DrawRoundedRectangle(ThemeBrush("Inset"), new Pen(ThemeBrush("LineStrong"), 1), groove, 2, 2);
         // A handle that moved less than a pixel has no filled part yet; a negative width would make WPF refuse the layout.
-        if (x - left > 1) dc.DrawRoundedRectangle(ThemeBrush("Accent"), null, new Rect(left + 1, mid - 3, x - left - 1, 6), 3, 3);
+        if (x - left > 1) dc.DrawRoundedRectangle(ThemeBrush("Accent"), null, new Rect(left + 1, mid - 3, x - left - 1, 6), 2, 2);
         var tick = new Pen(ThemeBrush("Dim"), 1);
         for (int i = 0; i <= 4; i++)
         {
@@ -39,8 +39,12 @@ public sealed class TBar : FrameworkElement
         }
         var handle = new Rect(x - HandleWidth / 2, mid - HandleHeight / 2, HandleWidth, HandleHeight);
         var body = ThemeBrush(IsMouseOver ? "CapHover" : "Cap");
-        dc.DrawRoundedRectangle(body, new Pen(ThemeBrush("CapBorder"), 1), handle, 6, 6);
-        dc.DrawLine(new Pen(ThemeBrush("Ink"), 1), new Point(x, mid - 8), new Point(x, mid + 8));
+        dc.DrawRoundedRectangle(body, new Pen(ThemeBrush("CapBorder"), 1), handle, 2, 2);
+        var gripPen = new Pen(ThemeBrush("CapBorder"), 1);
+        var centerPen = new Pen(ThemeBrush("Ink"), 1);
+        dc.DrawLine(gripPen, new Point(x - 4, mid - 7), new Point(x - 4, mid + 7));
+        dc.DrawLine(centerPen, new Point(x, mid - 9), new Point(x, mid + 9));
+        dc.DrawLine(gripPen, new Point(x + 4, mid - 7), new Point(x + 4, mid + 7));
     }
 
     private Brush ThemeBrush(string key) => TryFindResource(key) as Brush ?? Brushes.Gray;

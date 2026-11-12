@@ -469,10 +469,23 @@ static class PresentationChecks
             ((RadioButton)window.FindName("MixerNav")).IsChecked = true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             check(((FrameworkElement)window.FindName("MixerPage")).Visibility == Visibility.Visible, "The page bar returns to the mixer");
+
+            // Layout Edit Mode and Container Resizing
+            var editToggle = (ToggleButton)window.FindName("LayoutEditToggle");
+            var editBanner = (FrameworkElement)window.FindName("LayoutEditBanner");
+            editToggle.IsChecked = true;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+            check(window.IsLayoutEditMode && editBanner.IsVisible, "Activating layout edit mode shows the industrial resize banner");
+            window.CurrentAuxThumbnailHeight = 85;
+            window.InspectorPanelWidth = 320;
+            await Dispatcher.Yield(DispatcherPriority.ApplicationIdle); window.UpdateLayout();
+            check(window.CurrentAuxThumbnailHeight == 85 && window.InspectorPanelWidth == 320, "Dynamic container dimensions scale in real time");
+            SavePng(Capture(window, 1600, 960), Path.Combine(folder, "mixer-ui-layout-edit.png"));
         }
         finally { window.Close(); }
         var saved = SettingsStore.Load(Path.Combine(folder, "window-settings.json"));
         check(saved.Volume == 40 && saved.Transition == TransitionKind.WipeHorizontal && saved.TransitionMilliseconds == 250 && saved.Cues!.Count == pool.Count && saved.AuxSources?[0] == pool[3], "Closing the window saves the mixer settings and patched AUX routes");
+        check(saved.AuxThumbnailHeight == 85 && saved.InspectorWidth == 320, "Layout container resizing persists in settings.json");
     }
 
     static IEnumerable<DependencyObject> Descendants(DependencyObject parent)

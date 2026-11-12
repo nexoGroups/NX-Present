@@ -1,5 +1,12 @@
 # Releaseprüfung
 
+## 0.7.0-beta.2
+
+- Release-Build ohne Compilerwarnungen oder Fehler. Alle 410 automatisierten Prüfungen der Testsuite erfolgreich bestanden.
+- Die dynamische Container-Skalierung für das AUX-Modul und das Optionen-Panel sowie der Layout-Bearbeitungsmodus und die Persistenz in der `settings.json` wurden automatisiert geprüft.
+- Die reduzierten technischen Eckenradien (2 px bis 3 px) und das industrielle Farbschema wurden auf allen Seiten (Mischer, AUX-Patcher, Medienpool, Cue Mode, Setup, Szeneneditor) integriert.
+- Die Ausgabe am Beamer, echte HDMI-Signale und das Verhalten unter Smart App Control wurden für diese Beta nicht an Hardware geprüft. Das Setup wird ohne eigene Code-Signatur gebaut.
+
 ## 0.7.0-beta.1
 
 - Die Standardvalidierung prüft unter anderem das Öffnen des Szeneneditors, den Vorlagenwechsel, die neuen Quelltypen, die Video-Schnittmarken und die getrennte Versionsauswahl für Stable und Beta.

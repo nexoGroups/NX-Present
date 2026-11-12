@@ -34,6 +34,10 @@ public sealed record AppSettings
     public int? WindowWidth { get; init; }
     public int? WindowHeight { get; init; }
     public bool Maximized { get; init; }
+    /// <summary>Custom height of the thumbnail inside the 10 AUX tiles (default: 42, resizable in layout edit mode).</summary>
+    public int AuxThumbnailHeight { get; init; } = 42;
+    /// <summary>Width of the right-hand options / inspector panel (default: 246).</summary>
+    public double InspectorWidth { get; init; } = 246;
     /// <summary>Whether NX-Present looks for a newer release on the official release page each time it starts.</summary>
     public bool CheckUpdatesAtStart { get; init; } = true;
     /// <summary>Whether a found update is installed at start, as long as nothing is live. Otherwise the update waits for a click in Setup.</summary>
@@ -56,7 +60,15 @@ public static class SettingsStore
         if (settings.Prepared != null) Cue.Validate(settings.Prepared);
         AuxRouting.Validate(settings.AuxSources);
         if (settings.Rundown != null) CueRundown.Validate(settings.Rundown);
-        return settings with { Volume = Math.Clamp(settings.Volume, 0, 100), ImageFit = Math.Clamp(settings.ImageFit, 0, 2), TransitionMilliseconds = Math.Clamp(settings.TransitionMilliseconds, 100, 5000), FtbMilliseconds = Math.Clamp(settings.FtbMilliseconds, 0, 5000) };
+        return settings with
+        {
+            Volume = Math.Clamp(settings.Volume, 0, 100),
+            ImageFit = Math.Clamp(settings.ImageFit, 0, 2),
+            TransitionMilliseconds = Math.Clamp(settings.TransitionMilliseconds, 100, 5000),
+            FtbMilliseconds = Math.Clamp(settings.FtbMilliseconds, 0, 5000),
+            AuxThumbnailHeight = Math.Clamp(settings.AuxThumbnailHeight > 0 ? settings.AuxThumbnailHeight : 42, 32, 200),
+            InspectorWidth = Math.Clamp(settings.InspectorWidth > 0 ? settings.InspectorWidth : 246, 200, 500)
+        };
     }
     public static void Save(AppSettings settings, string? path = null)
     {

@@ -87,13 +87,13 @@
 
      <!-- Aspect Ratio Letterboxed Canvas (Virtual 1920x1080) -->
      <local:AspectBox HorizontalAlignment="Center" VerticalAlignment="Center">
-      <Border x:Name="CanvasHost" Background="Black" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="4" ClipToBounds="True">
+      <Border x:Name="CanvasHost" Background="Black" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="2" ClipToBounds="True">
        <!-- SceneCanvasView is inserted here in code-behind -->
       </Border>
      </local:AspectBox>
 
      <!-- Bottom Canvas Helper Bar -->
-     <Border Grid.Row="1" Background="{StaticResource Chrome}" CornerRadius="4" Margin="0,8,0,0" Padding="10,6">
+     <Border Grid.Row="1" Background="{StaticResource Chrome}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="2" Margin="0,8,0,0" Padding="10,6">
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
        <TextBlock Text="💡" Margin="0,0,6,0"/>
        <TextBlock Text="Ebene auf der Leinwand anklicken zum Verschieben. Anfasser ziehen zum Skalieren. Pfeiltasten = 1 px, Umschalt+Pfeil = 10 px, Entf = Löschen." Style="{StaticResource Hint}" FontSize="11"/>

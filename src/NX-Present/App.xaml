@@ -9,12 +9,29 @@
    </ResourceDictionary.MergedDictionaries>
 
   <Style TargetType="Window"><Setter Property="Background" Value="{StaticResource Bg}"/><Setter Property="Foreground" Value="{StaticResource Ink}"/><Setter Property="FontFamily" Value="{StaticResource NxFont}"/><Setter Property="FontSize" Value="12"/><Setter Property="UseLayoutRounding" Value="True"/></Style>
-  <Style x:Key="Eyebrow" TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="FontSize" Value="10.5"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style x:Key="Eyebrow" TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
   <Style x:Key="Hint" TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="FontSize" Value="12"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="18"/></Style>
   <Style x:Key="Mono" TargetType="TextBlock"><Setter Property="FontFamily" Value="Consolas"/><Setter Property="Foreground" Value="{StaticResource Muted}"/></Style>
-  <Style x:Key="PanelBorder" TargetType="Border"><Setter Property="Background" Value="{StaticResource Panel}"/><Setter Property="BorderBrush" Value="{StaticResource Line}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="{StaticResource NxCardRadius}"/></Style>
+  <Style x:Key="PanelBorder" TargetType="Border"><Setter Property="Background" Value="{StaticResource Panel}"/><Setter Property="BorderBrush" Value="{StaticResource Line}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="{StaticResource NxCardRadius}"/><Setter Property="SnapsToDevicePixels" Value="True"/></Style>
   <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource Eyebrow}"><Setter Property="Margin" Value="0,0,0,8"/></Style>
-  <Style TargetType="ToolTip"><Setter Property="Background" Value="{StaticResource Elevated}"/><Setter Property="Foreground" Value="{StaticResource Ink}"/><Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/><Setter Property="Padding" Value="9,6"/><Setter Property="FontSize" Value="12"/></Style>
+  <Style TargetType="ToolTip"><Setter Property="Background" Value="{StaticResource Elevated}"/><Setter Property="Foreground" Value="{StaticResource Ink}"/><Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/><Setter Property="Padding" Value="8,5"/><Setter Property="FontSize" Value="11"/><Setter Property="FontFamily" Value="{StaticResource NxFont}"/></Style>
+
+  <!-- Industrial Module Frame (active in layout mode) -->
+  <Style x:Key="IndustrialEditFrame" TargetType="Border">
+   <Setter Property="BorderBrush" Value="{StaticResource IndustrialCyan}"/>
+   <Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="CornerRadius" Value="2"/>
+   <Setter Property="Background" Value="#1206B6D4"/>
+  </Style>
+
+  <!-- Industrial Monospace Badge -->
+  <Style x:Key="IndustrialBadge" TargetType="Border">
+   <Setter Property="Background" Value="{StaticResource Raised}"/>
+   <Setter Property="BorderBrush" Value="{StaticResource LineStrong}"/>
+   <Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="CornerRadius" Value="2"/>
+   <Setter Property="Padding" Value="6,2"/>
+  </Style>
 
   <!-- NX filled, secondary, quiet and destructive actions share one control template. -->
   <Style TargetType="Button">
@@ -59,7 +76,7 @@
   <Style x:Key="NavButton" TargetType="RadioButton">
    <Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Width" Value="108"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Grid Background="Transparent">
-    <Border x:Name="Frame" Background="Transparent" CornerRadius="4" Margin="3,4" BorderBrush="Transparent" BorderThickness="1"/>
+    <Border x:Name="Frame" Background="Transparent" CornerRadius="2" Margin="3,4" BorderBrush="Transparent" BorderThickness="1"/>
     <Border x:Name="Bar" Height="2" Background="Transparent" VerticalAlignment="Top" Margin="14,0"/>
     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
    </Grid><ControlTemplate.Triggers>
@@ -70,7 +87,7 @@
   </Style>
   <Style x:Key="FilterButton" TargetType="RadioButton">
    <Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="FontSize" Value="11"/><Setter Property="Padding" Value="11,4"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Margin" Value="0,0,4,0"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Frame" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center"/></Border><ControlTemplate.Triggers>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Frame" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{StaticResource NxControlRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center"/></Border><ControlTemplate.Triggers>
     <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{StaticResource Ink}"/></Trigger>
     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Frame" Property="Background" Value="{StaticResource Raised}"/><Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource LineStrong}"/><Setter Property="Foreground" Value="{StaticResource Ink}"/></Trigger>
     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Accent}"/></Trigger>
@@ -100,7 +117,7 @@
   <Style x:Key="AppScrollBar" TargetType="ScrollBar">
    <Setter Property="Width" Value="12"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="OverridesDefaultStyle" Value="True"/><Setter Property="Background" Value="{StaticResource Chrome}"/><Setter Property="Stylus.IsPressAndHoldEnabled" Value="False"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
-    <Border Background="{TemplateBinding Background}" CornerRadius="4"><Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" ViewportSize="{TemplateBinding ViewportSize}">
+    <Border Background="{TemplateBinding Background}" CornerRadius="2"><Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" ViewportSize="{TemplateBinding ViewportSize}">
      <Track.DecreaseRepeatButton><RepeatButton x:Name="Decrease" Style="{StaticResource AppScrollPage}" Command="{x:Static ScrollBar.PageUpCommand}"/></Track.DecreaseRepeatButton>
      <Track.Thumb><Thumb x:Name="Grip" Style="{StaticResource AppScrollThumb}"/></Track.Thumb>
      <Track.IncreaseRepeatButton><RepeatButton x:Name="Increase" Style="{StaticResource AppScrollPage}" Command="{x:Static ScrollBar.PageDownCommand}"/></Track.IncreaseRepeatButton>

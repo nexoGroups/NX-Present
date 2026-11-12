@@ -69,6 +69,8 @@ public partial class MainWindow
             if (savedSettings.SelectedAudioDevice != null) AudioPicker.SelectedItem = devices.FirstOrDefault(x => x.Id == savedSettings.SelectedAudioDevice);
             else if (appliedAudioDevice != null) AudioPicker.SelectedItem = devices.FirstOrDefault(x => x.Id == appliedAudioDevice);
         }
+        CurrentAuxThumbnailHeight = savedSettings.AuxThumbnailHeight;
+        InspectorPanelWidth = savedSettings.InspectorWidth;
     }
     private void WireSettings()
     {
@@ -111,6 +113,7 @@ public partial class MainWindow
                 AnimatePatterns = switcher.AnimatePatterns, AutoStartOutput = AutoStartOutput.IsChecked == true,
                 CheckUpdatesAtStart = CheckUpdatesAtStart.IsChecked == true, AutoInstallUpdates = AutoInstallUpdates.IsChecked == true, UpdateAttempt = updateAttempt,
                 Cues = cues.ToList(), AuxSources = SnapshotAux(), Prepared = preview == Cue.Black ? null : preview, ShowPath = showPath, WebsiteDraft = websiteDraft, TextDraft = textDraft,
+                AuxThumbnailHeight = CurrentAuxThumbnailHeight, InspectorWidth = InspectorPanelWidth,
                 Rundown = CueModePage.Rundown.Snapshot(), NextRunCueId = CueModePage.Rundown.Next?.Id,
                 WindowX = bounds?.Left, WindowY = bounds?.Top, WindowWidth = bounds is Native.Rect b ? b.Right - b.Left : null,
                 WindowHeight = bounds is Native.Rect b2 ? b2.Bottom - b2.Top : null, Maximized = WindowState == WindowState.Maximized

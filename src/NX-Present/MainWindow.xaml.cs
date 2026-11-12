@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -32,6 +33,105 @@ public partial class MainWindow : Window
     private string? showPath;
     private Stretch fit = Stretch.Uniform;
     private const int EmergencyHotkey = 0x4E58;
+
+    public static readonly DependencyProperty CurrentAuxThumbnailHeightProperty =
+        DependencyProperty.Register(nameof(CurrentAuxThumbnailHeight), typeof(int), typeof(MainWindow),
+            new FrameworkPropertyMetadata(42, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+    public int CurrentAuxThumbnailHeight
+    {
+        get => (int)GetValue(CurrentAuxThumbnailHeightProperty);
+        set => SetValue(CurrentAuxThumbnailHeightProperty, Math.Clamp(value, 32, 180));
+    }
+
+    public static readonly DependencyProperty IsLayoutEditModeProperty =
+        DependencyProperty.Register(nameof(IsLayoutEditMode), typeof(bool), typeof(MainWindow),
+            new FrameworkPropertyMetadata(false, OnIsLayoutEditModeChanged));
+
+    private static void OnIsLayoutEditModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is MainWindow mw && mw.LayoutEditToggle != null && mw.LayoutEditToggle.IsChecked != (bool)e.NewValue)
+        {
+            mw.LayoutEditToggle.IsChecked = (bool)e.NewValue;
+        }
+    }
+
+    public bool IsLayoutEditMode
+    {
+        get => (bool)GetValue(IsLayoutEditModeProperty);
+        set => SetValue(IsLayoutEditModeProperty, value);
+    }
+
+    public static readonly DependencyProperty InspectorPanelWidthProperty =
+        DependencyProperty.Register(nameof(InspectorPanelWidth), typeof(double), typeof(MainWindow),
+            new FrameworkPropertyMetadata(246.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
+
+    public double InspectorPanelWidth
+    {
+        get => (double)GetValue(InspectorPanelWidthProperty);
+        set => SetValue(InspectorPanelWidthProperty, Math.Clamp(value, 200.0, 500.0));
+    }
+
+    private void LayoutEditToggle_Click(object sender, RoutedEventArgs e)
+    {
+        IsLayoutEditMode = LayoutEditToggle.IsChecked == true;
+    }
+
+    private void MixerBackground_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == sender || (e.OriginalSource is FrameworkElement fe && (fe.Name is "" or "MixerPage" || fe is Grid or Border)))
+        {
+            if (e.OriginalSource is Button or ComboBox or TextBox or Slider or Thumb) return;
+            IsLayoutEditMode = !IsLayoutEditMode;
+            if (LayoutEditToggle != null) LayoutEditToggle.IsChecked = IsLayoutEditMode;
+        }
+    }
+
+    private void AuxResizeThumb_DragDelta(object sender, DragDeltaEventArgs e)
+    {
+        int newHeight = (int)Math.Round(CurrentAuxThumbnailHeight - e.VerticalChange);
+        CurrentAuxThumbnailHeight = Math.Clamp(newHeight, 32, 180);
+        QueueSettingsSave();
+    }
+
+    private void InspectorResizeThumb_DragDelta(object sender, DragDeltaEventArgs e)
+    {
+        double newWidth = InspectorPanelWidth - e.HorizontalChange;
+        InspectorPanelWidth = Math.Clamp(newWidth, 200.0, 500.0);
+        QueueSettingsSave();
+    }
+
+    private void SetAuxSmall_Click(object sender, RoutedEventArgs e)
+    {
+        CurrentAuxThumbnailHeight = 42;
+        QueueSettingsSave();
+    }
+
+    private void SetAuxMedium_Click(object sender, RoutedEventArgs e)
+    {
+        CurrentAuxThumbnailHeight = 70;
+        QueueSettingsSave();
+    }
+
+    private void SetAuxLarge_Click(object sender, RoutedEventArgs e)
+    {
+        CurrentAuxThumbnailHeight = 100;
+        QueueSettingsSave();
+    }
+
+    private void ResetLayout_Click(object sender, RoutedEventArgs e)
+    {
+        CurrentAuxThumbnailHeight = 42;
+        InspectorPanelWidth = 246.0;
+        QueueSettingsSave();
+    }
+
+    private void FinishLayoutEdit_Click(object sender, RoutedEventArgs e)
+    {
+        IsLayoutEditMode = false;
+        if (LayoutEditToggle != null) LayoutEditToggle.IsChecked = false;
+        QueueSettingsSave();
+    }
 
     internal Switcher Mixer => switcher;
 
